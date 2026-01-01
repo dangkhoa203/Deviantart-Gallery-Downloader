@@ -11,8 +11,9 @@ namespace DeviantartDownloader.DTOs
         public AuthorAPIContent author { get; set; }
         public string? url { get; set; }
         public string? title { get; set; }
-        public Content? content { get; set; }
-        public ICollection<Content>? video { get; set; }
+        public MediaAPIContent? content { get; set; }
+        public ICollection<MediaAPIContent>? videos { get; set; }
         public string? excerpt { get; set; }
+        public bool? is_downloadable { get; set; }
     }
 }

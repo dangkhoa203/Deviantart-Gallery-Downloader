@@ -1,5 +1,6 @@
 ﻿using DeviantartDownloader.Command;
 using DeviantartDownloader.Models;
+using DeviantartDownloader.Models.Enum;
 using DeviantartDownloader.Service;
 using DeviantartDownloader.Service.Interface;
 using Microsoft.Win32;
@@ -17,6 +18,8 @@ namespace DeviantartDownloader.ViewModels
         private string _downloadPath;
         private readonly IDialogService _dialogService;
         public DeviantartService Client { get; set; }
+        public CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
+
         public string DownloadPath {
             get { return _downloadPath; }
             set { _downloadPath = value;OnPropertyChanged("DownloadPath"); }
@@ -26,8 +29,13 @@ namespace DeviantartDownloader.ViewModels
         public RelayCommand GetDownloadPathCommand { get; set; }
         public RelayCommand GetGalleryDialogCommand { get; set; }
         public RelayCommand RemoveDeviantFromListCommand { get; set; }
-        public MainWindowViewModel(IDialogService service,DeviantartService client) {
+        public RelayCommand ClearListCommand { get; set; }
+        public RelayCommand DonwloadDeviantCommand { get; set; }
+        private bool _isDownloading;
+        public bool isDownloading { get { return _isDownloading; } set { _isDownloading = value;OnPropertyChanged(nameof(isDownloading)); } }
+        public MainWindowViewModel(IDialogService service, DeviantartService client) {
             Client = client;
+            isDownloading = false;
             _downloadPath = string.Empty;
             _dialogService = service;
             _deviants = [];
@@ -36,7 +44,7 @@ namespace DeviantartDownloader.ViewModels
                 if (d != null) {
                     Deviants.Remove(d);
                 }
-            }, o => true);
+            }, o => !isDownloading);
             GetDownloadPathCommand = new RelayCommand(o => {
                 var folderDialog = new OpenFolderDialog {
                     Title = "Select Folder",
@@ -48,21 +56,41 @@ namespace DeviantartDownloader.ViewModels
                     string folderName = folderDialog.FolderName;
                     DownloadPath = folderName;
                 }
-            }, o => true);
-            GetGalleryDialogCommand= new RelayCommand(o => {
-                
-                var resultVm = _dialogService.ShowDialog<GetGalleryViewModel>(new GetGalleryViewModel(client)); 
+            }, o => !isDownloading);
+            GetGalleryDialogCommand = new RelayCommand(o => {
+
+                var resultVm = _dialogService.ShowDialog<GetGalleryViewModel>(new GetGalleryViewModel(client));
 
                 // 2. Transfer the data back to the Main Window
                 if (resultVm.Success) {
-                    foreach(var d in resultVm.Deviant) {
+                    foreach (var d in resultVm.Deviant) {
                         Deviants.Add(new(d));
                     }
                 }
-            }, o => true);
-
+            }, o => !isDownloading);
+            ClearListCommand = new RelayCommand(o => { Deviants.Clear(); }, o => !isDownloading && Deviants.Count>0);
+            DonwloadDeviantCommand = new RelayCommand(async o => {
+                isDownloading = true;
+                foreach (var d in Deviants) {
+                    if (d.Status != DownloadStatus.Completed) {
+                        await Client.DonwloadDeviant(d, cts, DownloadPath);
+                    }
+                }
+                var test = Deviants.ToList();
+                Deviants.Clear();
+                foreach (var d in test) {
+                    Deviants.Add(d);
+                }
+                isDownloading= false;
+               
+            }, o => { return Deviants.Count > 0 && DownloadPath.Count() > 0 && !isDownloading; });
         }
 
-
+        private void clearStatus() {
+            foreach(var d in Deviants) {
+                d.Status = DownloadStatus.Waiting;
+                d.Percent = 0;
+            }
+        }
     }
 }

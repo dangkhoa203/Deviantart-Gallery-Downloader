@@ -11,6 +11,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="80"/>
             <RowDefinition Height="90"/>
+            <RowDefinition Height="50"/>
             <RowDefinition Height="80"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="50"/>
@@ -47,15 +48,18 @@
                 SelectedItem="{Binding selectedFolder,Mode=TwoWay}"
                 Margin="20,0,20,0"/>
         </StackPanel>
-        <Grid Grid.Row="2" Margin="0,20,0,0" HorizontalAlignment="Center">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200"/>
-                <ColumnDefinition Width="200"/>
-            </Grid.ColumnDefinitions>
-            <Button Name="Btn_Cancel" Grid.Column="0" Margin="0,0,20,0" Click="Btn_Cancel_Click">Close</Button>
-            <Button Name="Btn_AddList" Grid.Column="1" Margin="0,0,20,0"  Command="{Binding GetDeviantCommand}" Content="{Binding loadingSearchDeviant}"/>
+        <Grid Grid.Row="2">
+            <Button Name="Btn_AddList" Width="400"  Grid.Column="1" Margin="20,0,20,10"  Command="{Binding GetDeviantCommand}" Content="{Binding loadingSearchDeviant}"/>
         </Grid>
-        <DataGrid  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviant}" AutoGenerateColumns="False" Grid.Row="3" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
+        <Grid Grid.Row="3" Margin="0,20,0,0" HorizontalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300"/>
+                <ColumnDefinition Width="300"/>
+            </Grid.ColumnDefinitions>
+            <Button Command="{Binding CloseCommand}" Name="Btn_Cancel" Grid.Column="0" Margin="0,0,20,0" Click="Btn_Cancel_Click">Close</Button>
+            <Button Name="Btn_Clear" Command="{Binding ClearListCommand}"  Grid.Column="1" Margin="20,0,0,0" >Clear</Button>
+        </Grid>
+        <DataGrid  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviant}" AutoGenerateColumns="False" Grid.Row="4" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
             <DataGrid.Columns>
                 <!-- Other DataGridTextColumns can go here -->
                 <DataGridTextColumn IsReadOnly="True" Binding="{Binding Author.Username}" Width="200" Header="Author">
@@ -79,6 +83,6 @@
             </DataGrid.Columns>
             
         </DataGrid>
-        <Button Name="Btn_Submit" Grid.Row="4" Margin="10,10,10,10" Content="Add to download list" Command="{Binding SubmitToDownloadListCommand}" Click="Btn_Submit_Click"/>
+        <Button Name="Btn_Submit" Grid.Row="5" Margin="10,0,10,10" Content="Add to download list" Command="{Binding SubmitToDownloadListCommand}" Click="Btn_Submit_Click"/>
     </Grid>
 </Window>

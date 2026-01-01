@@ -7,5 +7,6 @@ namespace DeviantartDownloader.Models {
         public string? Excerpt {  get; set; }
         public string? Src { get; set; }
         public int? FileSize { get; set; }
+        public string? Quality { get; set; }
     }
 }

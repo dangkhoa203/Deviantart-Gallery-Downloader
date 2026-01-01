@@ -56,8 +56,10 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand GetFolderCommand { get; set; }
         public RelayCommand GetDeviantCommand { get; set; }
         public RelayCommand RemoveDeviantFromListCommand { get; set; }
+        public RelayCommand ClearListCommand { get; set; }
         public RelayCommand ResetUserCommand { get; set; }
         public RelayCommand SubmitToDownloadListCommand { get; set; }
+        public RelayCommand CloseCommand { get; set; }
         public GetGalleryViewModel(DeviantartService Client) {
             Folders = [];
             Deviant = [];
@@ -68,6 +70,7 @@ namespace DeviantartDownloader.ViewModels {
                     Deviant.Remove(d);
                 }
             }, o => true);
+            ClearListCommand=new RelayCommand(o => { Deviant.Clear(); },o=>Deviant.Count>0);
             GetFolderCommand = new RelayCommand(async o => {
                 if (loadingSearchFolder != "Cancel") {
                     if (selectedUsername != UserName) {
@@ -121,6 +124,7 @@ namespace DeviantartDownloader.ViewModels {
             }, o => selectedUsername != "Not selected" && selectedFolder !=null );
             ResetUserCommand = new RelayCommand(o => { ResetSearch(); }, o => selectedUsername != "Not selected");
             SubmitToDownloadListCommand = new RelayCommand(o => { Success = true; }, o => Deviant.Count > 0);
+            CloseCommand = new RelayCommand(o => { }, o => loadingSearchDeviant != "Cancel");
         }
         public bool Success { get; set; } = false;
         private void ResetSearch() {

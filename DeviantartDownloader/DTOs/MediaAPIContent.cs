@@ -8,5 +8,6 @@ namespace DeviantartDownloader.DTOs
     {
         public string? src { get; set; }
         public int? filesize { get; set; }
+        public string? quality { get; set; }
     }
 }

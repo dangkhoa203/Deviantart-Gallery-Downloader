@@ -12,5 +12,6 @@ namespace DeviantartDownloader.Models {
         public Content? Content { get; set; }
         public ICollection<Content>? Video { get; set; }
         public DeviantType Type { get; set; }
+        public bool Donwloadable { get; set; }
     }
 }

@@ -15,6 +15,7 @@
             <RowDefinition Height="80"/>
             <RowDefinition Height="50" />
             <RowDefinition Height="*"/>
+            <RowDefinition Height="50" />
         </Grid.RowDefinitions>
         <Grid VerticalAlignment="Top" Grid.Row="0" Margin="10,10,10,10">
             <Grid.ColumnDefinitions>
@@ -31,14 +32,14 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
-                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Button Command="{Binding GetGalleryDialogCommand}" Margin="20,0,20,0" Grid.Column="0" Content="Get from gallery"/>
-            <Button Margin="20,0,20,0"  Grid.Column="1" Content="Clear"/>
-            <Button Margin="20,0,20,0"  Grid.Column="2" Content="Download"/>
+            <Button Margin="20,0,20,0" Command="{Binding ClearListCommand}"  Grid.Column="1" Content="Clear"/>
         </Grid>
         <Grid Grid.Row="2">
-            <DataGrid  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviants}" AutoGenerateColumns="False" Grid.Row="3" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
+            <DataGrid  VirtualizingStackPanel.IsVirtualizing="True"
+          VirtualizingStackPanel.VirtualizationMode="Recycling"
+          ScrollViewer.CanContentScroll="True"  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviants, Mode=TwoWay}" AutoGenerateColumns="False" Grid.Row="3" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
                 <DataGrid.Columns>
                     <!-- Other DataGridTextColumns can go here -->
                     <DataGridTextColumn IsReadOnly="True" Binding="{Binding Deviant.Author.Username}" Width="200" Header="Author">
@@ -50,10 +51,13 @@
                     <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Deviant.Type}" Header="Type">
 
                     </DataGridTextColumn>
-                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Percent}" Header="Percent">
+                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Percent , StringFormat=F2}" Header="Percent">
 
                     </DataGridTextColumn>
                     <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Status}" Header="Status">
+
+                    </DataGridTextColumn>
+                    <DataGridTextColumn IsReadOnly="True" Width="80" Binding="{Binding Speed}" Header="Speed">
 
                     </DataGridTextColumn>
                     <DataGridTemplateColumn Header="" Width="80">
@@ -67,6 +71,9 @@
                     </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
+        </Grid>
+        <Grid Grid.Row="3">
+            <Button Margin="20,0,20,10" Width="300" Command="{Binding DonwloadDeviantCommand}"  Content="Download"/>
         </Grid>
     </Grid>
 </Window>

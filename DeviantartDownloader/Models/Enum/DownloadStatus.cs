@@ -7,7 +7,7 @@ namespace DeviantartDownloader.Models.Enum
     public enum DownloadStatus
     {
         Waiting=0,
-        Downloadind=1,
+        Downloading=1,
         Completed=2,
         Fail=3
     }
