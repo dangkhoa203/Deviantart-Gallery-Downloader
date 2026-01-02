@@ -165,62 +165,65 @@ namespace DeviantartDownloader.Service {
                     content.DownloadSpeed = speed;
                 });
                 content.Status = DownloadStatus.Downloading;
+                if (!Directory.Exists(Path.Combine(destinationPath, content.Deviant.Author.Username))) {
+                    Directory.CreateDirectory(Path.Combine(destinationPath, content.Deviant.Author.Username));
+                }
                 switch (content.Deviant.Type) {
                     case DeviantType.Art:
-                        if (content.Deviant.Donwloadable) {
-                            string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
-                            using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
-                            var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
-                            var key = JsonSerializer.Deserialize<Response_GetDonwloadContent>(jsonResponse);
-                            if (key.error != null) {
-                                MessageBox.Show(key.error_description, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                throw new Exception(key.error_description);
-                            }
-                            using (var file = new FileStream(Path.Combine(destinationPath, key.filename), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                                await _httpClient.DownloadAsync(key.src, file, Speed, Progress, cts.Token);
-                            }
-                            content.Status = DownloadStatus.Completed;
+                    if (content.Deviant.Donwloadable) {
+                        string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
+                        using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
+                        var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
+                        var key = JsonSerializer.Deserialize<Response_GetDonwloadContent>(jsonResponse);
+                        if (key.error != null) {
+                            MessageBox.Show(key.error_description, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            throw new Exception(key.error_description);
                         }
-                        else {
-                            FileType imgType = GetFileType(content.Deviant.Content.Src);
-                            if (imgType == FileType.unknown) {
-                                throw new Exception("Unknow File Type");
-                            }
-                            using (var file = new FileStream(Path.Combine(destinationPath, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                                await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
-                            }
-                            content.Status = DownloadStatus.Completed;
+                        using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, key.filename), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                            await _httpClient.DownloadAsync(key.src, file, Speed, Progress, cts.Token);
                         }
-                        break;
-                    case DeviantType.Video:
-                        var video = content.Deviant.Video.OrderByDescending(o=>o.FileSize).First();
-                        FileType videoType = GetFileType(video.Src);
-                        if (videoType == FileType.unknown) {
+                        content.Status = DownloadStatus.Completed;
+                    }
+                    else {
+                        FileType imgType = GetFileType(content.Deviant.Content.Src);
+                        if (imgType == FileType.unknown) {
                             throw new Exception("Unknow File Type");
                         }
-                        using (var file = new FileStream(Path.Combine(destinationPath, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                            await _httpClient.DownloadAsync(video.Src, file, Speed, Progress, cts.Token);
+                        using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                            await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
                         }
                         content.Status = DownloadStatus.Completed;
-                        break;
+                    }
+                    break;
+                    case DeviantType.Video:
+                    var video = content.Deviant.Video.OrderByDescending(o => o.FileSize).First();
+                    FileType videoType = GetFileType(video.Src);
+                    if (videoType == FileType.unknown) {
+                        throw new Exception("Unknow File Type");
+                    }
+                    using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                        await _httpClient.DownloadAsync(video.Src, file, Speed, Progress, cts.Token);
+                    }
+                    content.Status = DownloadStatus.Completed;
+                    break;
                     case DeviantType.Literature:
-                        HtmlWeb web = new HtmlWeb();
+                    HtmlWeb web = new HtmlWeb();
 
 
-                        var htmlDoc = web.Load(content.Deviant.Url);
-                        if (web.StatusCode != HttpStatusCode.OK) {
-                            throw new Exception("Not found!");
-                        }
-                        IProgress<float> progress = Progress;
-                        progress.Report((float)0.5);
-                        var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
-                        string filePath = Path.Combine(destinationPath, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.html");
+                    var htmlDoc = web.Load(content.Deviant.Url);
+                    if (web.StatusCode != HttpStatusCode.OK) {
+                        throw new Exception("Not found!");
+                    }
+                    IProgress<float> progress = Progress;
+                    progress.Report((float)0.5);
+                    var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
+                    string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.html");
 
 
-                        File.WriteAllText(filePath, CreateHTMLFile(node[1].OuterHtml));
-                        progress.Report(1);
-                        content.Status = DownloadStatus.Completed;
-                        break;
+                    File.WriteAllText(filePath, CreateHTMLFile(node[1].OuterHtml));
+                    progress.Report(1);
+                    content.Status = DownloadStatus.Completed;
+                    break;
                 }
             }
             catch (TaskCanceledException ex) {
