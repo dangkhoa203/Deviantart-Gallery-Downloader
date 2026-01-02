@@ -26,48 +26,48 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
                 <Label Content="Path:" Target="{Binding ElementName=txtPath}" />
-                <TextBox Name="txtPath" IsReadOnly="{Binding isDownloading}" Background="White"  Height="30" FontSize="18" Text="{Binding DownloadPath}"  Margin="0,0,20,0"/>
+                <TextBox Name="txtPath" IsReadOnly="{Binding IsDownloading}" Background="White"  Height="30" FontSize="18" Text="{Binding DestinationPath}"  Margin="0,0,20,0"/>
             </StackPanel>
-            <Button Command="{Binding GetDownloadPathCommand}" Grid.Column="1" Height="50" Content= "Path"/>
+            <Button Command="{Binding GetDestinationPathCommand}" Grid.Column="1" Height="50" Content= "Select"/>
         </Grid>
         <Grid Grid.Row="1" Margin="20,0,20,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Command="{Binding GetGalleryDialogCommand}" Margin="20,0,20,0" Grid.Column="0" Content="Get from gallery"/>
+            <Button Command="{Binding ShowSearchGalleryDialogCommand}" Margin="20,0,20,0" Grid.Column="0" Content="Get from gallery"/>
             <Button Margin="20,0,20,0" Command="{Binding ClearListCommand}"  Grid.Column="1" Content="Clear"/>
         </Grid>
         <Grid Grid.Row="2">
-            <DataGrid  VirtualizingStackPanel.IsVirtualizing="True"
-          VirtualizingStackPanel.VirtualizationMode="Recycling"
-          ScrollViewer.CanContentScroll="True"  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviants, Mode=TwoWay}" AutoGenerateColumns="False" Grid.Row="3" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
+        <DataGrid 
+          
+       CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding DownloadList,  UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" Grid.Row="3" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
                 <DataGrid.Columns>
                     <!-- Other DataGridTextColumns can go here -->
-                    <DataGridTextColumn IsReadOnly="True" Binding="{Binding Deviant.Author.Username}" Width="200" Header="Author">
+                    <DataGridTextColumn IsReadOnly="True" Binding="{Binding Deviant.Author.Username}" Width="200" Header="Author"/>
 
-                    </DataGridTextColumn>
-                    <DataGridTextColumn IsReadOnly="True" Binding="{Binding Deviant.Title}"  Width="*" Header="Deviation Name">
 
-                    </DataGridTextColumn>
-                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Deviant.Type}" Header="Type">
+                    <DataGridTextColumn IsReadOnly="True" Binding="{Binding Deviant.Title}"  Width="*" Header="Deviation Name"/>
 
-                    </DataGridTextColumn>
-                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Percent , StringFormat=F2}" Header="Percent">
 
-                    </DataGridTextColumn>
-                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Status}" Header="Status">
+                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Deviant.Type}" Header="Type"/>
 
-                    </DataGridTextColumn>
-                    <DataGridTextColumn IsReadOnly="True" Width="80" Binding="{Binding Speed}" Header="Speed">
 
-                    </DataGridTextColumn>
+                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Percent , StringFormat=F2}" Header="Percent"/>
+
+
+                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Status}" Header="Status"/>
+
+
+                    <DataGridTextColumn IsReadOnly="True" Width="80" Binding="{Binding DownloadSpeed}" Header="Speed"/>
+
+
                     <DataGridTemplateColumn Header="" Width="80">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <Button Command="{Binding Path=DataContext.RemoveDeviantFromListCommand,       
                             RelativeSource= {RelativeSource FindAncestor,
-                            AncestorType={x:Type DataGrid}}}" CommandParameter="{Binding Path= Deviant.Deviationid}" Content="Remove"  />
+                            AncestorType={x:Type DataGrid}}}" CommandParameter="{Binding Path= Deviant.Id}" Content="Remove"  />
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
@@ -75,10 +75,10 @@
             </DataGrid>
         </Grid>
         <Grid Grid.Row="3" Margin="20,0,20,20">
-            <ProgressBar IsIndeterminate="{Binding isDownloading}"/>
+            <ProgressBar IsIndeterminate="{Binding IsDownloading}"/>
         </Grid>
         <Grid Grid.Row="4">
-            <Button Margin="20,0,20,10" Width="300" Command="{Binding DonwloadDeviantCommand}"  Content="Download"/>
+            <Button Margin="20,0,20,10" Width="300" Command="{Binding DonwloadDeviantCommand}"  Content="{Binding DownloadLabel}"/>
         </Grid>
     </Grid>
 </Window>

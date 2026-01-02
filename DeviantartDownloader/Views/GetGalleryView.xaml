@@ -23,9 +23,13 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
                 <Label Content="Search from username:" Target="{Binding ElementName=textUsername}" />
-                <TextBox Name="textUsername"  Background="White"  Height="30" FontSize="18" Text="{Binding UserName}"  Margin="20,0,20,0"/>
+                <TextBox Name="textUsername"  Background="White"  Height="30" FontSize="18" Text="{Binding SearchUserName,UpdateSourceTrigger=PropertyChanged}"  Margin="20,0,20,0">
+                    <TextBox.InputBindings>
+                        <KeyBinding Command="{Binding Path=GetFolderCommand}" Key="Enter" />
+                    </TextBox.InputBindings>
+                </TextBox>
             </StackPanel>
-            <Button Command="{Binding GetFolderCommand}" Grid.Column="1"  Content="{Binding loadingSearchFolder}"/>
+            <Button Command="{Binding GetFolderCommand}" Grid.Column="1"  Content="{Binding LoadingSearchFolder}"/>
         </Grid>
         <StackPanel Grid.Row="1" Margin="20,0,20,0">
             <Label Content="User folder" Target="{Binding ElementName=cbFolder}" />
@@ -36,20 +40,20 @@
                     <ColumnDefinition Width="100"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Margin="0,0,10,0">Selected user: </TextBlock>
-                <TextBlock Margin="10,0,0,0" Grid.Column="1" Text="{Binding selectedUsername}"/>
-                <Button Command="{Binding ResetUserCommand}" Grid.Column="2" Content="Reset"/>
+                <TextBlock Margin="10,0,0,0" Grid.Column="1" Text="{Binding SelectedUsername}"/>
+                <Button Command="{Binding ResetUserCommand ,UpdateSourceTrigger=PropertyChanged}" Grid.Column="2" Content="Reset"/>
             </Grid>
             <ComboBox 
                 IsSynchronizedWithCurrentItem="True"
                 Name="cbFolder"
-                ItemsSource="{Binding Folders}"
+                ItemsSource="{Binding SearchResultFolders}"
                 DisplayMemberPath="DisplayName"
                 SelectedValuePath="Id"
-                SelectedItem="{Binding selectedFolder,Mode=TwoWay}"
+                SelectedItem="{Binding SelectedFolder,Mode=TwoWay}"
                 Margin="20,0,20,0"/>
         </StackPanel>
         <Grid Grid.Row="2">
-            <Button Name="Btn_AddList" Width="400"  Grid.Column="1" Margin="20,0,20,10"  Command="{Binding GetDeviantCommand}" Content="{Binding loadingSearchDeviant}"/>
+            <Button Name="Btn_AddList" Width="400"  Grid.Column="1" Margin="20,0,20,10"  Command="{Binding GetDeviantCommand}" Content="{Binding LoadingSearchDeviant,Mode=TwoWay }"/>
         </Grid>
         <Grid Grid.Row="3" Margin="0,20,0,0" HorizontalAlignment="Center">
             <Grid.ColumnDefinitions>
@@ -59,7 +63,7 @@
             <Button Command="{Binding CloseCommand}" Name="Btn_Cancel" Grid.Column="0" Margin="0,0,20,0" Click="Btn_Cancel_Click">Close</Button>
             <Button Name="Btn_Clear" Command="{Binding ClearListCommand}"  Grid.Column="1" Margin="20,0,0,0" >Clear</Button>
         </Grid>
-        <DataGrid  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviant}" AutoGenerateColumns="False" Grid.Row="4" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
+        <DataGrid  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviants}" AutoGenerateColumns="False" Grid.Row="4" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
             <DataGrid.Columns>
                 <!-- Other DataGridTextColumns can go here -->
                 <DataGridTextColumn IsReadOnly="True" Binding="{Binding Author.Username}" Width="200" Header="Author">
@@ -76,7 +80,7 @@
                         <DataTemplate>
                             <Button Command="{Binding Path=DataContext.RemoveDeviantFromListCommand,       
                                     RelativeSource= {RelativeSource FindAncestor,
-                                    AncestorType={x:Type DataGrid}}}" CommandParameter="{Binding Path=Deviationid}" Content="Remove"  />
+                                    AncestorType={x:Type DataGrid}}}" CommandParameter="{Binding Path=Id}" Content="Remove"  />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

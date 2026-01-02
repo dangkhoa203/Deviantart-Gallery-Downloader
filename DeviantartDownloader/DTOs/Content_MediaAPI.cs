@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DeviantartDownloader.DTOs
 {
-    public record MediaAPIContent
+    public record Content_MediaAPI
     {
         public string? src { get; set; }
         public int? filesize { get; set; }

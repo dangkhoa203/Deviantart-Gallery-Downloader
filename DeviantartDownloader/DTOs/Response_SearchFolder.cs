@@ -4,9 +4,9 @@ using System.Text;
 using DeviantartDownloader.Models;
 namespace DeviantartDownloader.DTOs
 {
-    class searchFolderResponse
+    class Response_SearchFolder
     {
-        public List<FolderAPIContent>? results {  get; set; }
+        public List<Content_FolderAPI>? results {  get; set; }
         public int? next_offset { get; set; }
         public bool? has_more { get; set; }
         public string? error { set; get; }

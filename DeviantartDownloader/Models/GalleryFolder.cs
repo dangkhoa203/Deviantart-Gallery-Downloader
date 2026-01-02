@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DeviantartDownloader.Models
 {
-    public class Folder
+    public class GalleryFolder
     { 
         public string Id { get; set; }
         public string Name { get; set; }
@@ -14,5 +14,10 @@ namespace DeviantartDownloader.Models
                     return $"{Name} ({Size})";
                 return Name ;
             } }
+        public GalleryFolder(string id,string name,int size) {
+            Id = id;
+            Name = name;
+            Size = size;
+        }
     }
 }

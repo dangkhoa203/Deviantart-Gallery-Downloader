@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DeviantartDownloader.DTOs
 {
-    public record FolderAPIContent
+    public record Content_FolderAPI
     {
         public string folderid { get; set; }
         public string name { get; set; }

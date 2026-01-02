@@ -9,48 +9,77 @@ using System.Windows;
 
 namespace DeviantartDownloader.ViewModels {
     public class GetGalleryViewModel : ViewModel {
-        public DeviantartService client { get; set; }
+        public bool Success { get; set; } = false;
+        public DeviantartService DeviantartService { get; set; }
         private string _loadingSearchFolder = "Search";
-        public string loadingSearchFolder { 
+        public string LoadingSearchFolder {
             get { return _loadingSearchFolder; }
-            set { _loadingSearchFolder = value; OnPropertyChanged(nameof(loadingSearchFolder)); } 
+            set {
+                _loadingSearchFolder = value;
+                OnPropertyChanged(nameof(LoadingSearchFolder));
+            }
         }
+
         private string _loadingSearchDeviant = "Add to list";
-        public string loadingSearchDeviant {
+        public string LoadingSearchDeviant {
             get { return _loadingSearchDeviant; }
-            set { _loadingSearchDeviant = value; OnPropertyChanged(nameof(loadingSearchDeviant)); }
+            set {
+                _loadingSearchDeviant = value;
+                OnPropertyChanged(nameof(LoadingSearchDeviant));
+            }
         }
+
         private bool _isSearchable = true;
-        public bool isSearchable { get { return _isSearchable; } set { _isSearchable = value;OnPropertyChanged(nameof(isSearchable)); } }
+        public bool IsSearchable {
+            get { return _isSearchable; }
+            set {
+                _isSearchable = value;
+                OnPropertyChanged(nameof(IsSearchable));
+            }
+        }
 
         public CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
 
-        private string _currentSearchUsername = "Not selected";
-        public string selectedUsername { get { return _currentSearchUsername; } set { _currentSearchUsername = value;OnPropertyChanged("selectedUsername"); } }
-        private Folder? _currentFolder = null;
-        public Folder selectedFolder { get { return _currentFolder; } set { _currentFolder = value;OnPropertyChanged("selectedFolder"); } }
-        private ObservableCollection<Folder> _folders;
-        public ObservableCollection<Folder> Folders {
-            get { return _folders; }
+        private string _selectedUsername = "Not selected";
+        public string SelectedUsername {
+            get { return _selectedUsername; }
             set {
-                _folders = value;
-                OnPropertyChanged("cbFolder");
+                _selectedUsername = value;
+                OnPropertyChanged(nameof(SelectedUsername));
             }
         }
-        private string _userName;
-        public string UserName {
-            get { return _userName; }
+
+        private GalleryFolder? _selectedFolder = null;
+        public GalleryFolder SelectedFolder {
+            get { return _selectedFolder; }
             set {
-                _userName = value;
-                OnPropertyChanged("Username");
+                _selectedFolder = value;
+                OnPropertyChanged(nameof(SelectedFolder));
             }
         }
-        private ObservableCollection<Deviant> _Deviant;
-        public ObservableCollection<Deviant> Deviant {
-            get { return _Deviant; }
+
+        private ObservableCollection<GalleryFolder> _searchResultFolders;
+        public ObservableCollection<GalleryFolder> SearchResultFolders {
+            get { return _searchResultFolders; }
             set {
-                _Deviant = value;
-                OnPropertyChanged("dgDeviant");
+                _searchResultFolders = value;
+                OnPropertyChanged(nameof(SearchResultFolders));
+            }
+        }
+        private string _searchUserName;
+        public string SearchUserName {
+            get { return _searchUserName; }
+            set {
+                _searchUserName = value;
+                OnPropertyChanged(nameof(SearchUserName));
+            }
+        }
+        private ObservableCollection<Deviant> _deviants;
+        public ObservableCollection<Deviant> Deviants {
+            get { return _deviants; }
+            set {
+                _deviants = value;
+                OnPropertyChanged(nameof(Deviants));
             }
         }
         public RelayCommand GetFolderCommand { get; set; }
@@ -60,77 +89,101 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand ResetUserCommand { get; set; }
         public RelayCommand SubmitToDownloadListCommand { get; set; }
         public RelayCommand CloseCommand { get; set; }
-        public GetGalleryViewModel(DeviantartService Client) {
-            Folders = [];
-            Deviant = [];
-            client = Client;
-            RemoveDeviantFromListCommand = new RelayCommand(o => {
-                var d = Deviant.FirstOrDefault(d => d.Deviationid == o as string);
-                if (d != null) {
-                    Deviant.Remove(d);
-                }
-            }, o => true);
-            ClearListCommand=new RelayCommand(o => { Deviant.Clear(); },o=>Deviant.Count>0);
-            GetFolderCommand = new RelayCommand(async o => {
-                if (loadingSearchFolder != "Cancel") {
-                    if (selectedUsername != UserName) {
-                        loadingSearchFolder = "Cancel";
-                        var f = await client.GetFolders(UserName, cts);
-                        if (f.Count > 0) {
-                            ResetSearch();
-                            Folder allFolder = new() { Name = "All", Id = "", Size = f.Sum(o => o.Size) };
-                            selectedUsername = UserName;
-                            Folders.Clear();
-                            Folders.Add(allFolder);
-                            isSearchable = false;
-                            foreach (var a in f) {
-                                Folders.Add(a);
-                            }
-                            selectedFolder = allFolder;
-                            isSearchable = true;
-                        }
-                        loadingSearchFolder = "Search";
-                        MessageBox.Show("Search completed", "Information", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                    }
-                }
-                else {
-                    loadingSearchFolder = "Search";
-                    cts.Cancel();
-                    cts = new CancellationTokenSource();
-                }
-            }, o => true);
-            GetDeviantCommand = new RelayCommand(async o => {
-                if (loadingSearchDeviant != "Cancel") {
-                    loadingSearchDeviant = "Cancel";
-                    var f = await client.GetDeviants(UserName, selectedFolder.Id, cts);
-                    f = f.ToList();
-                    if (f.Count > 0) {
-                        isSearchable = false;
-                        foreach (var a in f) {
-                            if (!Deviant.Any(o => o.Deviationid == a.Deviationid)) {
-                                Deviant.Add(a);
-                            }
-                        }
-                        isSearchable = true;
-                    }
+        public GetGalleryViewModel(DeviantartService service) {
+            _searchResultFolders = [];
+            _deviants = [];
+            DeviantartService = service;
+            _searchUserName = "";
 
-                    loadingSearchDeviant = "Add to list";
-                }
-                else {
-                    loadingSearchDeviant = "Add to list";
-                    cts.Cancel();
-                    cts = new CancellationTokenSource();
-                }
-            }, o => selectedUsername != "Not selected" && selectedFolder !=null );
-            ResetUserCommand = new RelayCommand(o => { ResetSearch(); }, o => selectedUsername != "Not selected");
-            SubmitToDownloadListCommand = new RelayCommand(o => { Success = true; }, o => Deviant.Count > 0);
-            CloseCommand = new RelayCommand(o => { }, o => loadingSearchDeviant != "Cancel");
+            RemoveDeviantFromListCommand = new RelayCommand(o => {
+                RemoveDeviantFromList(o as string ?? "");
+            }, o => LoadingSearchDeviant != "Cancel");
+
+            ClearListCommand = new RelayCommand(o => {
+                Deviants.Clear();
+            }, o => Deviants.Count > 0 && LoadingSearchDeviant != "Cancel");
+
+            GetFolderCommand = new RelayCommand(async o => {
+                await GetFolder();
+            }, o => true);
+
+            GetDeviantCommand = new RelayCommand(async o => {
+                await GetDeviants();
+            }, o => SelectedUsername != "Not selected" && SelectedFolder != null);
+
+            ResetUserCommand = new RelayCommand(o => { 
+                ResetSearch(); 
+            }, o => SelectedUsername != "Not selected");
+
+            SubmitToDownloadListCommand = new RelayCommand(o => { 
+                Success = true; 
+            }, o => Deviants.Count > 0);
+
+            CloseCommand = new RelayCommand(o => { 
+
+            }, o => LoadingSearchDeviant != "Cancel");
         }
-        public bool Success { get; set; } = false;
+
         private void ResetSearch() {
-            selectedFolder = null;
-            selectedUsername = "Not selected";
-            Folders.Clear();
+            SelectedFolder = null;
+            SelectedUsername = "Not selected";
+            SearchResultFolders.Clear();
+        }
+        private void RemoveDeviantFromList(string Id) {
+            var deviant = Deviants.FirstOrDefault(d => d.Id == Id);
+            if (deviant != null) {
+                Deviants.Remove(deviant);
+            }
+        }
+        private async Task GetFolder() {
+            if (LoadingSearchFolder != "Cancel") {
+                if (SelectedUsername != SearchUserName) {
+                    LoadingSearchFolder = "Cancel";
+                    var f = await DeviantartService.GetFolders(SearchUserName, cts);
+                    if (f.Count > 0) {
+                        ResetSearch();
+                        GalleryFolder allFolder = new("", "All", 0);
+                        SelectedUsername = SearchUserName;
+                        SearchResultFolders.Clear();
+                        SearchResultFolders.Add(allFolder);
+                        IsSearchable = false;
+                        foreach (var a in f) {
+                            SearchResultFolders.Add(a);
+                        }
+                        SelectedFolder = allFolder;
+                        IsSearchable = true;
+                    }
+                    LoadingSearchFolder = "Search";
+                }
+            }
+            else {
+                LoadingSearchFolder = "Search";
+                cts.Cancel();
+                cts = new CancellationTokenSource();
+            }
+        }
+        private async Task GetDeviants() {
+            if (LoadingSearchDeviant != "Cancel") {
+                LoadingSearchDeviant = "Cancel";
+                var f = await DeviantartService.GetDeviants(SearchUserName, SelectedFolder.Id, cts);
+                f = f.ToList();
+                if (f.Count > 0) {
+                    IsSearchable = false;
+                    foreach (var a in f) {
+                        if (!Deviants.Any(o => o.Id == a.Id)) {
+                            Deviants.Add(a);
+                        }
+                    }
+                    IsSearchable = true;
+                }
+
+                LoadingSearchDeviant = "Add to list";
+            }
+            else {
+                LoadingSearchDeviant = "Add to list";
+                cts.Cancel();
+                cts = new CancellationTokenSource();
+            }
         }
     }
 }

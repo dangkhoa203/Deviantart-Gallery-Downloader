@@ -8,7 +8,7 @@ namespace DeviantartDownloader.Extension {
     public static class HttpClientExtensions {
         public static async Task DownloadAsync(this HttpClient client, string requestUri, Stream destination, IProgress<string> speed, IProgress<float> progress = null, CancellationToken cancellationToken = default) {
             // Get the http headers first to examine the content length
-            using (var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead)) {
+            using (var response = await client.GetAsync(requestUri, HttpCompletionOption.ResponseHeadersRead,cancellationToken)) {
                 var contentLength = response.Content.Headers.ContentLength;
 
                 using (var download = await response.Content.ReadAsStreamAsync(cancellationToken)) {
