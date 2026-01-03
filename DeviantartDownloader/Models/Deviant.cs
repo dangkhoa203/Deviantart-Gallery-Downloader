@@ -1,10 +1,17 @@
 ﻿using DeviantartDownloader.Models.Enum;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 
 namespace DeviantartDownloader.Models {
-    public class Deviant {
+    public class Deviant: ObservableObject {
+        private bool _isSeleted = false;
+        public bool IsSelected { 
+            get { return _isSeleted; } 
+            set { _isSeleted = value;
+                OnPropertyChanged(nameof(IsSelected));
+            } }
         public string Id { get; set; }
         public Author? Author {  get; set; }
         public string? Url { get; set; }
@@ -13,6 +20,6 @@ namespace DeviantartDownloader.Models {
         public ICollection<MediaContent>? Video { get; set; }
         public DeviantType Type { get; set; }
         public bool Donwloadable { get; set; }
-        public bool? IsSelected { get; set; }=false;
+        
     }
 }

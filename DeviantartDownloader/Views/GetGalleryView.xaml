@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DeviantartDownloader.Views" xmlns:viewmodels="clr-namespace:DeviantartDownloader.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:GetGalleryViewModel}"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="GetGallery" Height="800" Width="800">
+        Title="GetGallery" Height="800" Width="1000">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="80"/>
@@ -63,30 +63,66 @@
             <Button Command="{Binding CloseCommand}" Name="Btn_Cancel" Grid.Column="0" Margin="0,0,20,0" Click="Btn_Cancel_Click">Close</Button>
             <Button Name="Btn_Clear" Command="{Binding ClearListCommand}"  Grid.Column="1" Margin="20,0,0,0" >Clear</Button>
         </Grid>
-        <DataGrid  CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviants}" AutoGenerateColumns="False" Grid.Row="4" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
-            <DataGrid.Columns>
-                <!-- Other DataGridTextColumns can go here -->
-                <DataGridTextColumn IsReadOnly="True" Binding="{Binding Author.Username}" Width="200" Header="Author">
-                   
-                </DataGridTextColumn>
-                <DataGridTextColumn IsReadOnly="True" Binding="{Binding Title}"  Width="*" Header="Deviation Name">
-                    
-                </DataGridTextColumn>
-                <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Type}" Header="Type">
+        <Grid Grid.Row="4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="150"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="10,20,0,20">
+                <Button Command="{Binding SelectAllArtCommand}" Margin="0,0,0,20" Height="30">Select all art</Button>
+                <Button Command="{Binding SelectAllLiteratureCommand}" Margin="0,0,0,20" Height="30">Select all literature</Button>
+                <Button Command="{Binding SelectAllVideoCommand}" Margin="0,0,0,20" Height="30">Select all video</Button>
+            </StackPanel>
+            <DataGrid  Grid.Column="1" CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding Deviants}" AutoGenerateColumns="False"  Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="30">
 
-                </DataGridTextColumn>
-                <DataGridTemplateColumn Header="" Width="80">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Command="{Binding Path=DataContext.RemoveDeviantFromListCommand,       
-                                    RelativeSource= {RelativeSource FindAncestor,
-                                    AncestorType={x:Type DataGrid}}}" CommandParameter="{Binding Path=Id}" Content="Remove"  />
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
-            </DataGrid.Columns>
-            
-        </DataGrid>
-        <Button Name="Btn_Submit" Grid.Row="5" Margin="10,0,10,10" Content="Add to download list" Command="{Binding SubmitToDownloadListCommand}" Click="Btn_Submit_Click"/>
+                        <!-- Header Template with the CheckBox -->
+                        <DataGridTemplateColumn.HeaderTemplate>
+                            <DataTemplate>
+                                <CheckBox 
+                Name="HeaderCheckBox" 
+                IsChecked="{Binding DataContext.IsSelectAll, RelativeSource={RelativeSource AncestorType={x:Type DataGrid}, Mode=FindAncestor}}" 
+               
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.HeaderTemplate>
+
+                        <!-- Cell Template for individual row checkboxes -->
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox 
+                IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+
+                    </DataGridTemplateColumn>
+
+                    <!-- Other DataGridTextColumns can go here -->
+                    <DataGridTextColumn IsReadOnly="True" Binding="{Binding Author.Username}" Width="200" Header="Author">
+
+                    </DataGridTextColumn>
+                    <DataGridTextColumn IsReadOnly="True" Binding="{Binding Title}"  Width="*" Header="Deviation Name">
+
+                    </DataGridTextColumn>
+                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Type}" Header="Type">
+
+                    </DataGridTextColumn>
+                    <DataGridTemplateColumn Header="" Width="80">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button Command="{Binding Path=DataContext.RemoveDeviantFromListCommand,       
+                            RelativeSource= {RelativeSource FindAncestor,
+                            AncestorType={x:Type DataGrid}}}" CommandParameter="{Binding Path=Id}" Content="Remove"  />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+        <Button Name="Btn_Submit" Grid.Row="5" Margin="10,0,10,10" Content="Add to download list" Command="{Binding SubmitToDownloadListCommand}"/>
     </Grid>
 </Window>

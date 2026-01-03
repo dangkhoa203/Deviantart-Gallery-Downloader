@@ -26,8 +26,5 @@ namespace DeviantartDownloader.Views
             this.Close();
         }
 
-        private void Btn_Submit_Click(object sender, RoutedEventArgs e) {
-            this.Close();
-        }
     }
 }

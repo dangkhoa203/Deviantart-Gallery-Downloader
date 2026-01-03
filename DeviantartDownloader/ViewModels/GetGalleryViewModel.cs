@@ -1,5 +1,6 @@
 ﻿using DeviantartDownloader.Command;
 using DeviantartDownloader.Models;
+using DeviantartDownloader.Models.Enum;
 using DeviantartDownloader.Service;
 using System;
 using System.Collections.Generic;
@@ -8,8 +9,7 @@ using System.Text;
 using System.Windows;
 
 namespace DeviantartDownloader.ViewModels {
-    public class GetGalleryViewModel : ViewModel {
-        public bool Success { get; set; } = false;
+    public class GetGalleryViewModel : DialogViewModel {
         public DeviantartService DeviantartService { get; set; }
         private string _loadingSearchFolder = "Search";
         public string LoadingSearchFolder {
@@ -82,6 +82,17 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(Deviants));
             }
         }
+        private bool _isSelectAll = false;
+        public bool IsSelectAll { 
+            get { return _isSelectAll; }
+            set { _isSelectAll = value;
+                foreach (var deviant in Deviants) {
+                    deviant.IsSelected = value;
+                }
+                OnPropertyChanged(nameof(IsSelectAll));
+               
+            }  
+        }
         public RelayCommand GetFolderCommand { get; set; }
         public RelayCommand GetDeviantCommand { get; set; }
         public RelayCommand RemoveDeviantFromListCommand { get; set; }
@@ -89,6 +100,9 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand ResetUserCommand { get; set; }
         public RelayCommand SubmitToDownloadListCommand { get; set; }
         public RelayCommand CloseCommand { get; set; }
+        public RelayCommand SelectAllArtCommand { get; set; }
+        public RelayCommand SelectAllLiteratureCommand { get; set; }
+        public RelayCommand SelectAllVideoCommand { get; set; }
         public GetGalleryViewModel(DeviantartService service) {
             _searchResultFolders = [];
             _deviants = [];
@@ -100,8 +114,16 @@ namespace DeviantartDownloader.ViewModels {
             }, o => LoadingSearchDeviant != "Cancel");
 
             ClearListCommand = new RelayCommand(o => {
-                Deviants.Clear();
-            }, o => Deviants.Count > 0 && LoadingSearchDeviant != "Cancel");
+                var list=Deviants.Where(o => o.IsSelected).ToList();
+                if (list.Count != Deviants.Count) {
+                    list.ForEach(o => Deviants.Remove(o));
+                }
+                else {
+                    Deviants.Clear();
+                    IsSelectAll=false;
+                }
+               
+            }, o => Deviants.Where(o=>o.IsSelected).ToList().Count > 0 && LoadingSearchDeviant != "Cancel");
 
             GetFolderCommand = new RelayCommand(async o => {
                 await GetFolder();
@@ -116,14 +138,39 @@ namespace DeviantartDownloader.ViewModels {
             }, o => SelectedUsername != "Not selected");
 
             SubmitToDownloadListCommand = new RelayCommand(o => { 
-                Success = true; 
+                Success = true;
+                Dialog.Close();
             }, o => Deviants.Count > 0);
+
+            SelectAllArtCommand= new RelayCommand(o => {
+                SelectDeviantType(DeviantType.Art);
+            }, o => Deviants.Count > 0 && LoadingSearchDeviant != "Cancel");
+
+            SelectAllLiteratureCommand= new RelayCommand(o => {
+                SelectDeviantType(DeviantType.Literature);
+            }, o => Deviants.Count > 0 && LoadingSearchDeviant != "Cancel");
+
+            SelectAllVideoCommand= new RelayCommand(o => {
+                SelectDeviantType(DeviantType.Video);
+            }, o => Deviants.Count > 0 && LoadingSearchDeviant != "Cancel");
 
             CloseCommand = new RelayCommand(o => { 
 
             }, o => LoadingSearchDeviant != "Cancel");
         }
-
+        private void SelectDeviantType(DeviantType deviantType) {
+            var list = Deviants.Where(o => o.Type == deviantType).ToList();
+            if (list.Count == Deviants.Count) {
+                IsSelectAll = true;
+            }
+            else {
+                foreach (var deviant in Deviants) {
+                    if (deviant.Type == deviantType) {
+                        deviant.IsSelected = true;
+                    }
+                }
+            }
+        }
         private void ResetSearch() {
             SelectedFolder = null;
             SelectedUsername = "Not selected";
