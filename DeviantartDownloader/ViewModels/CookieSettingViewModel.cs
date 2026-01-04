@@ -1,5 +1,4 @@
 ﻿using DeviantartDownloader.Command;
-using FluentValidation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -19,7 +18,7 @@ namespace DeviantartDownloader.ViewModels {
         public CookieSettingViewModel(string headerString) {
             _headerString = headerString;
             SaveCommand = new RelayCommand(o => {
-                var Result = MessageBox.Show("Save","Are you sure you want to save?",MessageBoxButton.YesNo,MessageBoxImage.Question);
+                var Result = MessageBox.Show("Are you sure you want to save?", "Saving cookie", MessageBoxButton.YesNo,MessageBoxImage.Question);
                 if (Result == MessageBoxResult.Yes) {
                     Success = true;
                     Dialog.Close();

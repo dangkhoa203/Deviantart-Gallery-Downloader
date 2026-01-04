@@ -25,10 +25,10 @@ namespace DeviantartDownloader.Service {
         public DeviantartService() {
             _httpClient = new HttpClient();
         }
-        
+
         public async Task<bool> GetAccessToken() {
             try {
-                if (KeyTime == null || KeyTime < DateTime.Now) {
+                if(KeyTime == null || KeyTime < DateTime.Now) {
                     using HttpResponseMessage response = await _httpClient.GetAsync("https://www.deviantart.com/oauth2/token?client_id=58502&client_secret=54daa2749cd91ed21c28850b0a3be0a8&grant_type=client_credentials");
                     response.EnsureSuccessStatusCode();
                     var jsonResponse = await response.Content.ReadAsStringAsync();
@@ -45,20 +45,20 @@ namespace DeviantartDownloader.Service {
         public async Task<ICollection<GalleryFolder>> GetFolders(string userName, CancellationTokenSource cts) {
 
             try {
-                if (!await GetAccessToken())
+                if(!await GetAccessToken())
                     throw new Exception("Fail autho");
 
                 int? offSet = 0;
                 bool hasMore = true;
 
                 List<Content_FolderAPI> contents = [];
-                while (hasMore) {
+                while(hasMore) {
                     string request = $"https://www.deviantart.com/api/v1/oauth2/gallery/folders?username={userName}&limit=50&offset={offSet}&calculate_size=true&filter_empty_folder=true&access_token={AccessToken}";
                     using HttpResponseMessage response = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
                     var jsonResponse = await response.Content.ReadAsStringAsync();
 
                     var result = JsonSerializer.Deserialize<Response_SearchFolder>(jsonResponse);
-                    if (result.error != null) {
+                    if(result.error != null) {
                         throw new Exception(result.error_description);
                     }
 
@@ -71,13 +71,13 @@ namespace DeviantartDownloader.Service {
                                                 .Select(o => new GalleryFolder(o.folderid, o.name, o.size))
                                                 .OrderBy(o => o.Name)
                                                 .ToList();
-                if (folders.Count > 0) {
-                    MessageBox.Show("Search completed", "Information", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                if(folders.Count > 0) {
+                    MessageBox.Show("Search completed", "Action completed", MessageBoxButton.OK, MessageBoxImage.Exclamation);
                 }
                 return folders;
             }
-            catch (TaskCanceledException ex) {
-                if (ex.CancellationToken == cts.Token) {
+            catch(TaskCanceledException ex) {
+                if(ex.CancellationToken == cts.Token) {
                     MessageBox.Show("Operation canceled", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else {
@@ -85,7 +85,7 @@ namespace DeviantartDownloader.Service {
                 }
                 return [];
             }
-            catch (Exception ex) {
+            catch(Exception ex) {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return [];
             }
@@ -93,20 +93,20 @@ namespace DeviantartDownloader.Service {
         public async Task<ICollection<Deviant>> GetDeviants(string userName, string folderId, CancellationTokenSource cts) {
 
             try {
-                if (!await GetAccessToken())
+                if(!await GetAccessToken())
                     throw new Exception("Fail autho");
 
                 int? offSet = 0;
                 bool hasMore = true;
                 List<Content_DeviantAPI> contents = [];
 
-                while (hasMore) {
+                while(hasMore) {
                     string request = $"https://www.deviantart.com/api/v1/oauth2/gallery/{folderId}?username={userName}&offset={offSet}&mode=newest&mature_content=true&limit=24&access_token={AccessToken}";
                     using HttpResponseMessage response = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
                     var jsonResponse = await response.Content.ReadAsStringAsync();
                     var result = JsonSerializer.Deserialize<Response_SearchDeviant>(jsonResponse);
-                    if (result.error != null) {
-                       
+                    if(result.error != null) {
+
                         throw new Exception(result.error_description);
                     }
                     hasMore = result.has_more ?? false;
@@ -116,31 +116,34 @@ namespace DeviantartDownloader.Service {
 
                 List<Deviant> deviants = contents
                                 .Select(o => new Deviant() {
-                                             Author = new Author() {
-                                                     Id = o.author.userid,
-                                                     Username = o.author.username
-                                             },
-                                             Content = o.content !=null ? new MediaContent() {
-                                                                            Src=o.content.src,
-                                                                            FileSize=o.content.filesize } 
+                                    Author = new Author() {
+                                        Id = o.author.userid,
+                                        Username = o.author.username
+                                    },
+                                    Content = o.content != null ? new MediaContent() {
+                                        Src = o.content.src,
+                                        FileSize = o.content.filesize
+                                    }
                                                                         : null,
-                                             Id = o.deviationid,
-                                             Title = o.title,
-                                             Url = o.url,
-                                             Video = o.videos !=null ? o.videos
-                                                                         .Select(o=>new MediaContent() {
-                                                                                        Src=o.src,
-                                                                                        Quality=o.quality,
-                                                                                        FileSize=o.filesize})
-                                                                         .ToList() 
-                                                                     : null ,
-                                             Donwloadable=  o.is_downloadable ?? false,
-                                             Type = TypeValidation(o)})
+                                    Id = o.deviationid,
+                                    Title = o.title,
+                                    Url = o.url,
+                                    Video = o.videos != null ? o.videos
+                                                                         .Select(o => new MediaContent() {
+                                                                             Src = o.src,
+                                                                             Quality = o.quality,
+                                                                             FileSize = o.filesize
+                                                                         })
+                                                                         .ToList()
+                                                                     : null,
+                                    Donwloadable = o.is_downloadable ?? false,
+                                    Type = TypeValidation(o)
+                                })
                                 .ToList();
                 return deviants;
             }
-            catch (TaskCanceledException ex) {
-                if (ex.CancellationToken == cts.Token) {
+            catch(TaskCanceledException ex) {
+                if(ex.CancellationToken == cts.Token) {
                     MessageBox.Show("Operation canceled", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else {
@@ -148,112 +151,131 @@ namespace DeviantartDownloader.Service {
                 }
                 return [];
             }
-            catch (Exception ex) {
+            catch(Exception ex) {
                 MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return [];
             }
         }
-        public async Task DonwloadDeviant(DownloadableDeviant content, CancellationTokenSource cts,string destinationPath, string HeaderString="") {
+        public async Task DonwloadDeviant(DownloadableDeviant content, CancellationTokenSource cts, string destinationPath, string HeaderString = "") {
             try {
                 content.Percent = 0;
                 content.Status = DownloadStatus.Waiting;
-                var Progress = new Progress<float>(percent =>
-                {
+                var Progress = new Progress<float>(percent => {
                     content.Percent = percent * 100;
                 });
                 var Speed = new Progress<string>(speed => {
                     content.DownloadSpeed = speed;
                 });
+
                 content.Status = DownloadStatus.Downloading;
-                if (!Directory.Exists(Path.Combine(destinationPath, content.Deviant.Author.Username))) {
+                if(!Directory.Exists(Path.Combine(destinationPath, content.Deviant.Author.Username))) {
                     Directory.CreateDirectory(Path.Combine(destinationPath, content.Deviant.Author.Username));
                 }
-                switch (content.Deviant.Type) {
+
+                switch(content.Deviant.Type) {
                     case DeviantType.Art:
-                    if (content.Deviant.Donwloadable) {
-                        string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
-                        using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
-                        var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
-                        var key = JsonSerializer.Deserialize<Response_GetDonwloadContent>(jsonResponse);
-                        if (key.error != null) {
-                            MessageBox.Show(key.error_description, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            throw new Exception(key.error_description);
+                        if(content.Deviant.Donwloadable) {
+                            string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
+                            using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
+                            var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
+                            var downloadContent = JsonSerializer.Deserialize<Response_GetDonwloadContent>(jsonResponse);
+
+                            if(downloadContent.error != null) {
+                                MessageBox.Show(downloadContent.error_description, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                throw new Exception(downloadContent.error_description);
+                            }
+
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, downloadContent.filename), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
+                            }
+
+                            content.Status = DownloadStatus.Completed;
                         }
-                        using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, key.filename), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                            await _httpClient.DownloadAsync(key.src, file, Speed, Progress, cts.Token);
+                        else {
+                            FileType imgType = GetFileType(content.Deviant.Content.Src);
+                            if(imgType == FileType.unknown) {
+                                throw new Exception("Unknow File Type");
+                            }
+
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
+                            }
+
+                            content.Status = DownloadStatus.Completed;
                         }
-                        content.Status = DownloadStatus.Completed;
-                    }
-                    else {
-                        FileType imgType = GetFileType(content.Deviant.Content.Src);
-                        if (imgType == FileType.unknown) {
+                        break;
+
+                    case DeviantType.Video:
+                        var video = content.Deviant.Video.OrderByDescending(o => o.FileSize).First();
+                        FileType videoType = GetFileType(video.Src);
+                        if(videoType == FileType.unknown) {
                             throw new Exception("Unknow File Type");
                         }
-                        using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                            await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
+
+                        using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                            await _httpClient.DownloadAsync(video.Src, file, Speed, Progress, cts.Token);
                         }
+
                         content.Status = DownloadStatus.Completed;
-                    }
-                    break;
-                    case DeviantType.Video:
-                    var video = content.Deviant.Video.OrderByDescending(o => o.FileSize).First();
-                    FileType videoType = GetFileType(video.Src);
-                    if (videoType == FileType.unknown) {
-                        throw new Exception("Unknow File Type");
-                    }
-                    using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                        await _httpClient.DownloadAsync(video.Src, file, Speed, Progress, cts.Token);
-                    }
-                    content.Status = DownloadStatus.Completed;
-                    break;
+                        break;
+
                     case DeviantType.Literature:
+                        var handler = new SocketsHttpHandler {
+                            UseCookies = false
+                        };
 
-                    
-                    // 2. Setup the handler to use that container
-                    var handler = new SocketsHttpHandler {
-                        UseCookies = false
-                    };
+                        IProgress<float> progress = Progress;
+                        using(var httpClient = new HttpClient(handler)) {
+                            var request = new HttpRequestMessage(HttpMethod.Get, content.Deviant.Url);
+                            if(HeaderString != "") {
+                                request.Headers.Add("Cookie", HeaderString);
+                            }
 
-                    IProgress<float> progress = Progress;
-                    using (var httpClient = new HttpClient(handler)) {
-                        var request = new HttpRequestMessage(HttpMethod.Get, content.Deviant.Url);
-                        if (HeaderString != "") {
-                            request.Headers.Add("Cookie", HeaderString);
+                            using(var response = await httpClient.SendAsync(request, cts.Token)) {
+                                response.EnsureSuccessStatusCode();
+                                progress.Report((float)0.25);
+
+                                string htmlContent = await response.Content.ReadAsStringAsync(cts.Token);
+                                var htmlDoc = new HtmlDocument();
+                                htmlDoc.LoadHtml(htmlContent);
+                                progress.Report((float)0.5);
+
+                                var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
+                                progress.Report((float)0.75);
+
+                                string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.html");
+                                await File.WriteAllTextAsync(filePath, CreateHTMLFile(node[1].InnerText.Contains("Badge Awards") ? node[2].OuterHtml : node[1].OuterHtml), cts.Token);
+                                progress.Report(1);
+
+                                content.Status = DownloadStatus.Completed;
+                            }
+                            
+                            
                         }
-                        var response = await httpClient.SendAsync(request);
-                        response.EnsureSuccessStatusCode();
-                        progress.Report((float)0.5);
-                        string htmlContent=await response.Content.ReadAsStringAsync();
-                        var htmlDoc = new HtmlDocument();
-                        htmlDoc.LoadHtml(htmlContent);
-                        var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
-
-                        string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.html");
-                        File.WriteAllText(filePath, CreateHTMLFile(node[1].InnerText.Contains("Badge Awards") ? node[2].OuterHtml: node[1].OuterHtml));
-                        progress.Report(1);
-                        content.Status = DownloadStatus.Completed;
-                    }
-                    break;
+                        break;
                 }
             }
-            catch (TaskCanceledException ex) {
-                if (ex.CancellationToken == cts.Token) {
-                    content.Status = DownloadStatus.Fail;
+            catch(TaskCanceledException ex) {
+                if(ex.CancellationToken == cts.Token) {
+                    content.Status = DownloadStatus.Canceled;
                 }
                 else {
                     content.Status = DownloadStatus.Fail;
                 }
             }
-            catch (Exception ex) {
+            catch(Exception ex) {
                 content.Status = DownloadStatus.Fail;
             }
-            
+            finally {
+                content.DownloadSpeed = "";
+            }
+
         }
         private DeviantType TypeValidation(Content_DeviantAPI result) {
-            if (result.videos != null) {
+            if(result.videos != null) {
                 return DeviantType.Video;
             }
-            else if (result.excerpt != null) {
+            else if(result.excerpt != null) {
                 return DeviantType.Literature;
             }
             else {
@@ -261,17 +283,19 @@ namespace DeviantartDownloader.Service {
             }
         }
         private FileType GetFileType(string url) {
-            if (url.Contains(".jpg")) {
+            if(url.Contains(".jpg")) {
                 return FileType.jpg;
-            }else if (url.Contains(".png")) {
+            }
+            else if(url.Contains(".png")) {
                 return FileType.png;
-            }else if(url.Contains(".gif")) {
+            }
+            else if(url.Contains(".gif")) {
                 return FileType.gif;
             }
-            else if (url.Contains(".mp4")) {
+            else if(url.Contains(".mp4")) {
                 return FileType.mp4;
             }
-            else if (url.Contains(".mp3")) {
+            else if(url.Contains(".mp3")) {
                 return FileType.mp3;
             }
             return FileType.unknown;
@@ -290,7 +314,7 @@ namespace DeviantartDownloader.Service {
         private List<char> charsToReplace = ['*', '<', '>', '?', '|', '/', '\\', '"', ':', ' '];
         private string GetLegalFileName(string title) {
             var legalFileName = title.Trim();
-            foreach (char c in charsToReplace) {
+            foreach(char c in charsToReplace) {
                 legalFileName = legalFileName.Replace(c, '_');
             }
             return legalFileName;

@@ -9,6 +9,7 @@ namespace DeviantartDownloader.Models.Enum
         Waiting=0,
         Downloading=1,
         Completed=2,
-        Fail=3
+        Fail=3,
+        Canceled = 4
     }
 }

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DeviantartDownloader"
         xmlns:vm="clr-namespace:DeviantartDownloader.ViewModels" d:DataContext="{d:DesignInstance Type=vm:MainWindowViewModel}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="750" Width="1000"
+        Title="Deviantart Downloader" Height="750" Width="1000"
         Background="AntiqueWhite"
         WindowStartupLocation="CenterScreen"
         >
@@ -27,7 +27,7 @@
             </Grid.ColumnDefinitions>
             <StackPanel Grid.Column="0">
                 <Label Content="Path:" Target="{Binding ElementName=txtPath}" />
-                <TextBox Name="txtPath" IsReadOnly="{Binding IsDownloading}" Background="White"  Height="30" FontSize="18" Text="{Binding DestinationPath}"  Margin="0,0,20,0"/>
+                <TextBox Name="txtPath" IsReadOnly="{Binding IsDownloading,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}" Background="White"  Height="30" FontSize="18" Text="{Binding DestinationPath}"  Margin="0,0,20,0"/>
             </StackPanel>
             <Button Command="{Binding GetDestinationPathCommand}" Grid.Column="1" Height="50" Content= "Select"/>
         </Grid>
@@ -42,8 +42,10 @@
         <Grid Grid.Row="2" Margin="20,0,20,10">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition/>
+                <ColumnDefinition/>
             </Grid.ColumnDefinitions>
-            <Button Width="200" Command="{Binding ShowCookieSettingDialogCommand}" Margin="0,0,0,0" Grid.Column="0" Content="Cookie Setting"/>
+            <Button Width="300" Command="{Binding ShowCookieSettingDialogCommand}" Margin="0,0,0,0" Grid.Column="0" Content="Cookie Setting"/>
+            <Button Width="300" Command="{Binding ClearCompletedFromListCommand}" Margin="0,0,0,0" Grid.Column="1" Content="Clear all completed"/>
         </Grid>
         <Grid Grid.Row="3">
         <DataGrid 
@@ -60,7 +62,7 @@
                     <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Deviant.Type}" Header="Type"/>
 
 
-                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Percent , StringFormat=F2}" Header="Percent"/>
+                    <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding DisplayPercent}" Header="Percent"/>
 
 
                     <DataGridTextColumn IsReadOnly="True" Width="60" Binding="{Binding Status}" Header="Status"/>

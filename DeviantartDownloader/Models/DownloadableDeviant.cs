@@ -13,6 +13,7 @@ namespace DeviantartDownloader.Models
             set {
                 _percent = value;
                 OnPropertyChanged(nameof(Percent));
+                OnPropertyChanged(nameof(DisplayPercent));
             }
         }
         public DownloadStatus _status;
@@ -31,6 +32,9 @@ namespace DeviantartDownloader.Models
                 _downloadSpeed = value;
                 OnPropertyChanged(nameof(DownloadSpeed));
             }
+        }
+        public string DisplayPercent {
+            get { return $"{_percent:0.##}%"; }
         }
 
         public Deviant Deviant { get; set; }

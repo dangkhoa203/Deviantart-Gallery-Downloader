@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:DeviantartDownloader.Views" xmlns:viewmodels="clr-namespace:DeviantartDownloader.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:GetGalleryViewModel}"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
-        Title="GetGallery" Height="800" Width="1000">
+        Title="Search Gallery" Height="800" Width="1000">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="80"/>

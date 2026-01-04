@@ -8,6 +8,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Reflection.Metadata;
@@ -29,7 +30,9 @@ namespace DeviantartDownloader.ViewModels
         private string _destinationPath;
         public string DestinationPath {
             get { return _destinationPath; }
-            set { _destinationPath = value; OnPropertyChanged(nameof(DestinationPath)); }
+            set { 
+                _destinationPath = value; 
+                OnPropertyChanged(nameof(DestinationPath)); }
         }
 
         private ObservableCollection<DownloadableDeviant> _downloadList;
@@ -56,6 +59,7 @@ namespace DeviantartDownloader.ViewModels
         public RelayCommand ShowCookieSettingDialogCommand { get; set; }
         public RelayCommand RemoveDeviantFromListCommand { get; set; }
         public RelayCommand ClearListCommand { get; set; }
+        public RelayCommand ClearCompletedFromListCommand { get; set; }
         public RelayCommand DonwloadDeviantCommand { get; set; }
         private string _headerString="";
         public string HeaderString {
@@ -78,6 +82,10 @@ namespace DeviantartDownloader.ViewModels
                 ClearList(); 
             }, o => !IsDownloading && DownloadList.Count > 0);
 
+            ClearCompletedFromListCommand = new RelayCommand(o => {
+                ClearCompletedFromList();
+            }, o => !IsDownloading && DownloadList.Where(o=>o.Status==DownloadStatus.Completed).ToList().Count>0);
+
             GetDestinationPathCommand = new RelayCommand(o => {
                 GetDownloadPath();
             }, o => !IsDownloading);
@@ -89,10 +97,10 @@ namespace DeviantartDownloader.ViewModels
             ShowCookieSettingDialogCommand = new RelayCommand(o => {
                 ShowCookieSettingDialog();
             }, o => !IsDownloading);
+           
             DonwloadDeviantCommand = new RelayCommand(async o => {
                 await DownloadDeviant();
-            }, o => { return DownloadList.Where(o=>o.Status!=DownloadStatus.Completed).ToList().Count > 0 &&
-                             DestinationPath.Count() > 0; });
+            }, o => { return DownloadList.Where(o=>o.Status!=DownloadStatus.Completed).ToList().Count > 0; });
         }
 
         private void RemoveDeviantFromList(string Id) {
@@ -103,6 +111,11 @@ namespace DeviantartDownloader.ViewModels
         }
         private void ClearList() {
             DownloadList.Clear();
+        }
+        private void ClearCompletedFromList() {
+            foreach (var deviant in DownloadList.Where(o => o.Status == DownloadStatus.Completed).ToList()) {
+                DownloadList.Remove(deviant);
+            }
         }
         private void GetDownloadPath() {
             var folderDialog = new OpenFolderDialog {
@@ -138,60 +151,63 @@ namespace DeviantartDownloader.ViewModels
         }
         private async Task DownloadDeviant() {
             if (!IsDownloading) {
+
+                if (!Directory.Exists(DestinationPath)) {
+                   MessageBox.Show("Path not found!","Error",MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
                 DownloadLabel = "Cancel";
                 IsDownloading = true;
                 var downloadQueue = new ConcurrentQueue<DownloadableDeviant>(DownloadList);
-                var throttler = new SemaphoreSlim(1);
+                var throttler = new SemaphoreSlim(3);
                 var tasks = new List<Task>();
                 using var client = new HttpClient();
+                try {
+                    foreach(var deviant in downloadQueue) {
+                       
+                        if(deviant.Status != DownloadStatus.Completed) {
+                            await throttler.WaitAsync(cts.Token);
+                            tasks.Add(Task.Run(async () =>
+                            {
+                                try {
+                                    await DeviantartService.DonwloadDeviant(deviant, cts, DestinationPath, HeaderString);
+                                }
+                                catch(Exception ex) {
 
-                foreach (var deviant in downloadQueue) {
-                    await throttler.WaitAsync();
-                    if (deviant.Status != DownloadStatus.Completed) {
-                        
-
-                        // Start the download task
-                        tasks.Add(Task.Run(async () =>
-                        {
-                            try {
-                                await DeviantartService.DonwloadDeviant(deviant, cts, DestinationPath, HeaderString);
-                            }
-                            catch (Exception ex) {
-
-                            }
-                            finally {
-                                // Release the slot so another download can start
-                                throttler.Release();
-                            }
-                        }, cts.Token));
+                                }
+                                finally {
+                                    throttler.Release();
+                                }
+                            }, cts.Token));
+                        }
                     }
-                    // Wait for a slot to become available in the semaphore
-                    
-                }
 
-                // Wait for all initiated tasks to complete
-                await Task.WhenAll(tasks);
+                    await Task.WhenAll(tasks);
 
-                var test = DownloadList.ToList();
-                DownloadList.Clear();
-                foreach (var d in test) {
-                    DownloadList.Add(d);
+                    var test = DownloadList.ToList();
+                    DownloadList.Clear();
+                    foreach(var d in test) {
+                        DownloadList.Add(d);
+                    }
+                    IsDownloading = false;
+                    DownloadLabel = "Download";
                 }
-                IsDownloading = false;
-                DownloadLabel = "Download";
+                catch {
+
+                }
+                
             }
             else {
                 cts.Cancel();
-                MessageBox.Show("Opperation canceled", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
                 DownloadLabel = "Download";
                 IsDownloading = false;
                 var test = DownloadList.ToList();
                 DownloadList.Clear();
-
                 foreach (var d in test) {
                     DownloadList.Add(d);
                 }
                 cts = new CancellationTokenSource();
+                MessageBox.Show("Opperation canceled", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
     }

@@ -120,9 +120,8 @@ namespace DeviantartDownloader.ViewModels {
                 }
                 else {
                     Deviants.Clear();
-                    IsSelectAll=false;
                 }
-               
+                IsSelectAll = false;
             }, o => Deviants.Where(o=>o.IsSelected).ToList().Count > 0 && LoadingSearchDeviant != "Cancel");
 
             GetFolderCommand = new RelayCommand(async o => {
@@ -184,6 +183,10 @@ namespace DeviantartDownloader.ViewModels {
         }
         private async Task GetFolder() {
             if (LoadingSearchFolder != "Cancel") {
+                if(SearchUserName == "") {
+                    MessageBox.Show("Username empty!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
                 if (SelectedUsername != SearchUserName) {
                     LoadingSearchFolder = "Cancel";
                     var f = await DeviantartService.GetFolders(SearchUserName, cts);
