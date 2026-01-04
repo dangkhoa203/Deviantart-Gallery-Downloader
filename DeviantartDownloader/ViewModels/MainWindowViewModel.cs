@@ -146,23 +146,27 @@ namespace DeviantartDownloader.ViewModels
                 using var client = new HttpClient();
 
                 foreach (var deviant in downloadQueue) {
-                    // Wait for a slot to become available in the semaphore
                     await throttler.WaitAsync();
+                    if (deviant.Status != DownloadStatus.Completed) {
+                        
 
-                    // Start the download task
-                    tasks.Add(Task.Run(async () =>
-                    {
-                        try {
-                            await DeviantartService.DonwloadDeviant(deviant, cts, DestinationPath,HeaderString);
-                        }
-                        catch (Exception ex) {
+                        // Start the download task
+                        tasks.Add(Task.Run(async () =>
+                        {
+                            try {
+                                await DeviantartService.DonwloadDeviant(deviant, cts, DestinationPath, HeaderString);
+                            }
+                            catch (Exception ex) {
 
-                        }
-                        finally {
-                            // Release the slot so another download can start
-                            throttler.Release();
-                        }
-                    }, cts.Token));
+                            }
+                            finally {
+                                // Release the slot so another download can start
+                                throttler.Release();
+                            }
+                        }, cts.Token));
+                    }
+                    // Wait for a slot to become available in the semaphore
+                    
                 }
 
                 // Wait for all initiated tasks to complete

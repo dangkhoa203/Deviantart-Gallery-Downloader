@@ -189,7 +189,7 @@ namespace DeviantartDownloader.Service {
                         if (imgType == FileType.unknown) {
                             throw new Exception("Unknow File Type");
                         }
-                        using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                        using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
                             await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
                         }
                         content.Status = DownloadStatus.Completed;
@@ -201,7 +201,7 @@ namespace DeviantartDownloader.Service {
                     if (videoType == FileType.unknown) {
                         throw new Exception("Unknow File Type");
                     }
-                    using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                    using (var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
                         await _httpClient.DownloadAsync(video.Src, file, Speed, Progress, cts.Token);
                     }
                     content.Status = DownloadStatus.Completed;
@@ -215,31 +215,24 @@ namespace DeviantartDownloader.Service {
                     };
 
                     IProgress<float> progress = Progress;
-                    progress.Report((float)0.5);
                     using (var httpClient = new HttpClient(handler)) {
                         var request = new HttpRequestMessage(HttpMethod.Get, content.Deviant.Url);
                         if (HeaderString != "") {
                             request.Headers.Add("Cookie", HeaderString);
                         }
-                       
                         var response = await httpClient.SendAsync(request);
                         response.EnsureSuccessStatusCode();
+                        progress.Report((float)0.5);
                         string htmlContent=await response.Content.ReadAsStringAsync();
                         var htmlDoc = new HtmlDocument();
                         htmlDoc.LoadHtml(htmlContent);
                         var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
-                        string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"{content.Deviant.Title}_by_{content.Deviant.Author.Username}.html");
+
+                        string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)}_by_{content.Deviant.Author.Username}.html");
                         File.WriteAllText(filePath, CreateHTMLFile(node[1].InnerText.Contains("Badge Awards") ? node[2].OuterHtml: node[1].OuterHtml));
                         progress.Report(1);
                         content.Status = DownloadStatus.Completed;
                     }
-
-
-
-
-                   
-                    
-                    
                     break;
                 }
             }
@@ -293,6 +286,14 @@ namespace DeviantartDownloader.Service {
                        {outerHTML}
                     </body>
                     </html>";
+        }
+        private List<char> charsToReplace = ['*', '<', '>', '?', '|', '/', '\\', '"', ':', ' '];
+        private string GetLegalFileName(string title) {
+            var legalFileName = title.Trim();
+            foreach (char c in charsToReplace) {
+                legalFileName = legalFileName.Replace(c, '_');
+            }
+            return legalFileName;
         }
     }
 }
