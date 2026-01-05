@@ -48,6 +48,14 @@
             <Button Width="300" Command="{Binding ClearCompletedFromListCommand}" Margin="0,0,0,0" Grid.Column="1" Content="Clear all completed"/>
         </Grid>
         <Grid Grid.Row="3">
+            <Grid Margin="20,0,20,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="35"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0">Total:</TextBlock>
+                <TextBlock Grid.Column="1" Text="{Binding DownloadList.Count}"/>
+            </Grid>
         <DataGrid 
           
        CanUserAddRows="False" RowHeight="30" ItemsSource="{Binding DownloadList,  UpdateSourceTrigger=PropertyChanged}" AutoGenerateColumns="False" Grid.Row="3" Margin="20,20,20,20" SelectionMode="Single" CanUserResizeRows="False">
