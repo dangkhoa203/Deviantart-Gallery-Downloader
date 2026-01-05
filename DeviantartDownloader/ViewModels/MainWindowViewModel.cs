@@ -27,7 +27,7 @@ namespace DeviantartDownloader.ViewModels {
         public CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
 
 
-        private string _destinationPath;
+        private string _destinationPath="";
         public string DestinationPath {
             get {
                 return _destinationPath;
@@ -38,7 +38,7 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
 
-        private ObservableCollection<DownloadableDeviant> _downloadList;
+        private ObservableCollection<DownloadableDeviant> _downloadList = [];
         public ObservableCollection<DownloadableDeviant> DownloadList {
             get {
                 return _downloadList;
@@ -49,7 +49,7 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
 
-        private bool _isDownloading;
+        private bool _isDownloading=false;
         public bool IsDownloading {
             get {
                 return _isDownloading;
@@ -59,7 +59,7 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(IsDownloading));
             }
         }
-        private string _downloadLabel;
+        private string _downloadLabel= "Download";
         public string DownloadLabel {
             get {
                 return _downloadLabel;
@@ -92,15 +92,11 @@ namespace DeviantartDownloader.ViewModels {
             get; set;
         }
         private string _headerString = "";
-        
+
 
         public MainWindowViewModel(IDialogService service, DeviantartService client) {
             DeviantartService = client;
-            IsDownloading = false;
-            _destinationPath = string.Empty;
             _dialogService = service;
-            _downloadList = [];
-            _downloadLabel = "Download";
             RemoveDeviantFromListCommand = new RelayCommand(o => {
                 RemoveDeviantFromList(o as string ?? "");
             }, o => !IsDownloading);
@@ -178,7 +174,7 @@ namespace DeviantartDownloader.ViewModels {
             var viewModel = _dialogService.ShowDialog<SettingViewModel>(new SettingViewModel(_headerString, _queueLimit));
             if(viewModel.Success) {
                 _headerString = viewModel.HeaderString;
-                _queueLimit=int.Parse(viewModel.QueueLimit);
+                _queueLimit = int.Parse(viewModel.QueueLimit);
             }
 
 

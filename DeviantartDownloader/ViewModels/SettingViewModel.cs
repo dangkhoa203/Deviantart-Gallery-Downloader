@@ -6,9 +6,6 @@ using System.Windows;
 
 namespace DeviantartDownloader.ViewModels {
     public class SettingViewModel : DialogViewModel {
-        public bool Success {
-            get; set;
-        }
         private string _headerString = "";
         public string HeaderString {
             get {
@@ -18,7 +15,7 @@ namespace DeviantartDownloader.ViewModels {
                 _headerString = value;
             }
         }
-        public string _queueLimit="";
+        public string _queueLimit = "";
         public string QueueLimit {
             get {
                 return _queueLimit;
@@ -30,16 +27,16 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand SaveCommand {
             get; set;
         }
-        public SettingViewModel(string headerString,int queueLimit) {
+        public SettingViewModel(string headerString, int queueLimit) {
             _headerString = headerString;
-            _queueLimit=queueLimit.ToString();
+            _queueLimit = queueLimit.ToString();
             SaveCommand = new RelayCommand(o => {
                 var Result = MessageBox.Show("Are you sure you want to save?", "Saving cookie", MessageBoxButton.YesNo, MessageBoxImage.Question);
                 if(Result == MessageBoxResult.Yes) {
                     Success = true;
                     Dialog.Close();
                 }
-            }, o =>QueueLimit!="");
+            }, o => QueueLimit != "");
         }
     }
 }
