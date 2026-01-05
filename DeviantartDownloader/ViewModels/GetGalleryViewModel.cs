@@ -93,6 +93,7 @@ namespace DeviantartDownloader.ViewModels {
                
             }  
         }
+
         public RelayCommand GetFolderCommand { get; set; }
         public RelayCommand GetDeviantCommand { get; set; }
         public RelayCommand RemoveDeviantFromListCommand { get; set; }

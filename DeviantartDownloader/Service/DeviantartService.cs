@@ -231,15 +231,19 @@ namespace DeviantartDownloader.Service {
                             if(HeaderString != "") {
                                 request.Headers.Add("Cookie", HeaderString);
                             }
+                            progress.Report(0.25f);
+
+                            
 
                             using(var response = await httpClient.SendAsync(request, cts.Token)) {
+                                await Task.Delay(TimeSpan.FromSeconds(2));
                                 response.EnsureSuccessStatusCode();
-                                progress.Report(0.25f);
+                                progress.Report(0.5f);
 
                                 string htmlContent = await response.Content.ReadAsStringAsync(cts.Token);
                                 var htmlDoc = new HtmlDocument();
                                 htmlDoc.LoadHtml(htmlContent);
-                                progress.Report(0.5f);
+                                
 
                                 var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
                                 progress.Report(0.75f);
@@ -318,11 +322,11 @@ namespace DeviantartDownloader.Service {
                     </body>
                     </html>";
         }
-        private List<char> charsToReplace = ['*', '<', '>', '?', '|', '/', '\\', '"', ':', ' '];
+        private List<char> charsToReplace = ['*', '<', '>', '?', '|', '/', '\\', '"', ':'];
         private string GetLegalFileName(string title) {
             var legalFileName = title.Trim();
             foreach(char c in charsToReplace) {
-                legalFileName = legalFileName.Replace(c, '_');
+                legalFileName = legalFileName.Replace(c, ' ');
             }
             return legalFileName;
         }
