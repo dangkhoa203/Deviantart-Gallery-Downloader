@@ -233,10 +233,10 @@ namespace DeviantartDownloader.Service {
                             }
                             progress.Report(0.25f);
 
-                            
 
+                            await Task.Delay(TimeSpan.FromSeconds(2));
                             using(var response = await httpClient.SendAsync(request, cts.Token)) {
-                                await Task.Delay(TimeSpan.FromSeconds(1.5));
+                               
                                 response.EnsureSuccessStatusCode();
                                 progress.Report(0.5f);
 

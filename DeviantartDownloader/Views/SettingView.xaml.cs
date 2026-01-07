@@ -26,7 +26,7 @@ namespace DeviantartDownloader.Views {
 
         private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e) {
 
-            Regex regex = new Regex("[^1-6]+");
+            Regex regex = new Regex("[^1-5]+");
             e.Handled = regex.IsMatch(e.Text);
         }
 
