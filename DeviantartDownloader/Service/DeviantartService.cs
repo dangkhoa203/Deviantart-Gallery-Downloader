@@ -315,18 +315,17 @@ namespace DeviantartDownloader.Service {
                     <head>
                         <title>{title}</title>
                           <style>
+                              *::selection{{
+                                 background-color: #00c787;
+                              }}
                               body {{
                                  background-color: #d2decc;
-                              }}
-
-                              p {{
-                                 font-size: 1.5em;
-                                 font-weight: 450;
+                                 font-size: 1.3em;
                                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                               }}
 
-                              p::selection {{
-                                 background-color: #00c787;
+                              p {{
+                                 font-weight: 450;
                               }}
 
                               .quoTVs {{
@@ -338,12 +337,11 @@ namespace DeviantartDownloader.Service {
                                  background-color: #dde6d9;
 
                                  a {{
-                                    font-size: 1.2em;
+                                    font-size: 1em;
                                     color: rgb(0, 0, 0);
                                     text-decoration: none;
                                  }}
                               }}
-
                               .title {{
                                  text-align: center;
                                  letter-spacing: 0.2em;
