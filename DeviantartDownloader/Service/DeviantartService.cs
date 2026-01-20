@@ -192,8 +192,8 @@ namespace DeviantartDownloader.Service {
                             using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("dd-MM-yyyy")}] "+downloadContent.filename), FileMode.Create, FileAccess.Write, FileShare.None)) {
                                 await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
                             }
-
                             content.Status = DownloadStatus.Completed;
+                            content.Percent = 1;
                         }
                         else {
                             FileType imgType = GetFileType(content.Deviant.Content.Src);
@@ -206,6 +206,7 @@ namespace DeviantartDownloader.Service {
                             }
 
                             content.Status = DownloadStatus.Completed;
+                            content.Percent = 1;
                         }
                         break;
 
@@ -221,6 +222,7 @@ namespace DeviantartDownloader.Service {
                         }
 
                         content.Status = DownloadStatus.Completed;
+                        content.Percent = 1;
                         break;
 
                     case DeviantType.Literature:
@@ -249,19 +251,17 @@ namespace DeviantartDownloader.Service {
                                 var htmlDoc = new HtmlDocument();
                                 htmlDoc.LoadHtml(htmlContent);
 
-                                var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
+                                var literatureText = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
                                 progress.Report(0.75f);
 
                                 string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("dd-MM-yyyy")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username}.html");
-                                HtmlNode textContent = node[1].InnerText.Contains("Badge Awards") ? node[2] : node[1];
+                                HtmlNode textContent = literatureText[1].InnerText.Contains("Badge Awards") ? literatureText[2] : literatureText[1];
                                 textContent.RemoveChild(textContent.ChildNodes[0], false);
                                 await File.WriteAllTextAsync(filePath, CreateHTMLFile(content.Deviant.Title, textContent), cts.Token);
                                 progress.Report(1);
 
                                 content.Status = DownloadStatus.Completed;
                             }
-
-
                         }
                         break;
                 }
@@ -311,8 +311,8 @@ namespace DeviantartDownloader.Service {
             }
             return FileType.unknown;
         }
-        private string CreateHTMLFile(string title, HtmlNode outerHTML) {
-            var figureCheck = outerHTML.SelectNodes(".//figure")?.ToList();
+        private string CreateHTMLFile(string title, HtmlNode node) {
+            var figureCheck = node.SelectNodes(".//figure")?.ToList();
             if(figureCheck != null) {
                 foreach(var f in figureCheck) {
                     f.AddClass("quoTVs");
@@ -369,7 +369,7 @@ namespace DeviantartDownloader.Service {
                        <h1 class='title'>{title}</h1>
                        <hr/>
                        <div class='content'>
-                            {outerHTML.OuterHtml} 
+                            {node.OuterHtml} 
                        </div> 
                     </body>
                     </html>";

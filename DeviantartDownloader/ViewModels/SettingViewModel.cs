@@ -8,6 +8,7 @@ using System.Windows;
 namespace DeviantartDownloader.ViewModels {
     public class SettingViewModel : DialogViewModel {
         private IDialogCoordinator _dialogCoordinator;
+
         private string _headerString = "";
         public string HeaderString {
             get {
@@ -17,6 +18,7 @@ namespace DeviantartDownloader.ViewModels {
                 _headerString = value;
             }
         }
+
         public string _queueLimit = "";
         public string QueueLimit {
             get {
@@ -26,6 +28,7 @@ namespace DeviantartDownloader.ViewModels {
                 _queueLimit = value;
             }
         }
+
         public RelayCommand SaveCommand {
             get; set;
         }

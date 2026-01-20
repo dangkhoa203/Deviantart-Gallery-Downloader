@@ -13,9 +13,15 @@ using System.Windows.Data;
 
 namespace DeviantartDownloader.ViewModels {
     public class GetGalleryViewModel : DialogViewModel {
-        public DeviantartService DeviantartService {
-            get; set;
+        private readonly DeviantartService _deviantartService;
+        public CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
+
+        public ICollectionView deviantViewItems {
+            get;
         }
+
+        private IDialogCoordinator _dialogCoordinator;
+
         private bool _loadingSearchFolder = false;
         public bool LoadingSearchFolder {
             get {
@@ -26,6 +32,7 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(LoadingSearchFolder));
             }
         }
+
         private string _searchFolderLabel = "Search";
         public string SearchFolderLabel {
             get {
@@ -47,6 +54,7 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(LoadingSearchDeviant));
             }
         }
+
         private string _searchDeviantLabel = "Add to list";
         public string SearchDeviantLabel {
             get {
@@ -69,8 +77,6 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
 
-        public CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
-
         private string _selectedUsername = "Not selected";
         public string SelectedUsername {
             get {
@@ -92,6 +98,7 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(SelectedFolder));
             }
         }
+
         private bool _isComboBoxEnabled = false;
         public bool IsComboBoxEnabled {
             get {
@@ -102,6 +109,7 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(IsComboBoxEnabled));
             }
         }
+
         private ObservableCollection<GalleryFolder> _searchResultFolders = [];
         public ObservableCollection<GalleryFolder> SearchResultFolders {
             get {
@@ -124,6 +132,7 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(SearchUserName));
             }
         }
+
         private ObservableCollection<Deviant> _deviants = [];
         public ObservableCollection<Deviant> Deviants {
             get {
@@ -134,6 +143,7 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(Deviants));
             }
         }
+
         private bool _isSelectAll = false;
         public bool IsSelectAll {
             get {
@@ -167,9 +177,6 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand SubmitToDownloadListCommand {
             get; set;
         }
-        public RelayCommand CloseCommand {
-            get; set;
-        }
         public RelayCommand SelectAllArtCommand {
             get; set;
         }
@@ -179,12 +186,9 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand SelectAllVideoCommand {
             get; set;
         }
-        public ICollectionView deviantViewItems {
-            get;
-        }
-        private IDialogCoordinator _dialogCoordinator;
+
         public GetGalleryViewModel(DeviantartService service, IDialogCoordinator dialogCoordinator) {
-            DeviantartService = service;
+            _deviantartService = service;
             _dialogCoordinator= dialogCoordinator;
             deviantViewItems = CollectionViewSource.GetDefaultView(_deviants);
             RemoveDeviantFromListCommand = new RelayCommand(o => {
@@ -230,10 +234,6 @@ namespace DeviantartDownloader.ViewModels {
             SelectAllVideoCommand = new RelayCommand(o => {
                 SelectDeviantType(DeviantType.Video);
             }, o => Deviants.Count > 0 && !LoadingSearchDeviant);
-
-            CloseCommand = new RelayCommand(o => {
-
-            }, o => !LoadingSearchDeviant);
         }
         private void SelectDeviantType(DeviantType deviantType) {
             var list = Deviants.Where(o => o.Type == deviantType).ToList();
@@ -269,16 +269,16 @@ namespace DeviantartDownloader.ViewModels {
                 if(SelectedUsername != SearchUserName) {
                     LoadingSearchFolder = true;
                     SearchFolderLabel = "Cancel";
-                    var f = await DeviantartService.GetFolders(SearchUserName, cts,_dialogCoordinator,this);
-                    if(f.Count > 0) {
+                    var folders = await _deviantartService.GetFolders(SearchUserName, cts,_dialogCoordinator,this);
+                    if(folders.Count > 0) {
                         ResetSearch();
                         GalleryFolder allFolder = new("", "All", 0);
                         SelectedUsername = SearchUserName;
                         SearchResultFolders.Clear();
                         SearchResultFolders.Add(allFolder);
                         IsSearchable = false;
-                        foreach(var a in f) {
-                            SearchResultFolders.Add(a);
+                        foreach(var folder in folders) {
+                            SearchResultFolders.Add(folder);
                         }
                         SelectedFolder = allFolder;
                         IsSearchable = true;
@@ -301,18 +301,17 @@ namespace DeviantartDownloader.ViewModels {
             if(!LoadingSearchDeviant) {
                 LoadingSearchDeviant = true;
                 SearchDeviantLabel = "Cancel";
-                var f = await DeviantartService.GetDeviants(SearchUserName, SelectedFolder.Id, cts,_dialogCoordinator,this);
-                f = f.ToList();
-                if(f.Count > 0) {
+                var deviants = await _deviantartService.GetDeviants(SearchUserName, SelectedFolder?.Id ?? "", cts,_dialogCoordinator,this);
+                deviants = deviants.ToList();
+                if(deviants.Count > 0) {
                     IsSearchable = false;
-                    foreach(var a in f) {
-                        if(!Deviants.Any(o => o.Id == a.Id)) {
-                            Deviants.Add(a);
+                    foreach(var deviant in deviants) {
+                        if(!Deviants.Any(o => o.Id == deviant.Id)) {
+                            Deviants.Add(deviant);
                         }
                     }
                     IsSearchable = true;
                 }
-
                 SearchDeviantLabel = "Add to list";
                 LoadingSearchDeviant = false;
             }
