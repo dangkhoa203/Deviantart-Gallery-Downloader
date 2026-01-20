@@ -3,11 +3,13 @@ using DeviantartDownloader.Models;
 using DeviantartDownloader.Models.Enum;
 using DeviantartDownloader.Service;
 using DeviantartDownloader.Service.Interface;
+using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -15,19 +17,26 @@ using System.Reflection.Metadata;
 using System.Security.Policy;
 using System.Text;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Navigation;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace DeviantartDownloader.ViewModels {
     public class MainWindowViewModel : ViewModel {
         private readonly IDialogService _dialogService;
-        public DeviantartService DeviantartService {
-            get; set;
+
+        private IDialogCoordinator _dialogCoordinator;
+
+        private string _headerString = "";
+        private int _queueLimit { get; set; } = 2;
+        public ICollectionView downloadViewItems {
+            get;
         }
+        private readonly DeviantartService _deviantartService;
         public CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
 
 
-        private string _destinationPath="";
+        private string _destinationPath = "";
         public string DestinationPath {
             get {
                 return _destinationPath;
@@ -49,7 +58,7 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
 
-        private bool _isDownloading=false;
+        private bool _isDownloading = false;
         public bool IsDownloading {
             get {
                 return _isDownloading;
@@ -59,7 +68,8 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(IsDownloading));
             }
         }
-        private string _downloadLabel= "Download";
+
+        private string _downloadLabel = "Download";
         public string DownloadLabel {
             get {
                 return _downloadLabel;
@@ -69,7 +79,21 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(DownloadLabel));
             }
         }
-        private int _queueLimit { get; set; } = 2;
+
+        private bool _isSelectAll = false;
+        public bool IsSelectAll {
+            get {
+                return _isSelectAll;
+            }
+            set {
+                _isSelectAll = value;
+                foreach(var download in DownloadList) {
+                    download.IsSelected = value;
+                }
+                OnPropertyChanged(nameof(IsSelectAll));
+
+            }
+        }
         public RelayCommand GetDestinationPathCommand {
             get; set;
         }
@@ -85,29 +109,41 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand ClearListCommand {
             get; set;
         }
-        public RelayCommand ClearCompletedFromListCommand {
+        public RelayCommand DownloadDeviantCommand {
             get; set;
         }
-        public RelayCommand DonwloadDeviantCommand {
+        public RelayCommand SelectAllArtCommand {
             get; set;
         }
-        private string _headerString = "";
+        public RelayCommand SelectAllLiteratureCommand {
+            get; set;
+        }
+        public RelayCommand SelectAllVideoCommand {
+            get; set;
+        }
+        public RelayCommand SelectAllCompletedCommand {
+            get; set;
+        }
+        public RelayCommand SelectAllFailCommand {
+            get; set;
+        }
+        public RelayCommand ToDeviantartCommand {
+            get; set;
+        }
 
 
-        public MainWindowViewModel(IDialogService service, DeviantartService client) {
-            DeviantartService = client;
+        public MainWindowViewModel(IDialogService service, DeviantartService client,IDialogCoordinator dialogCoordinator) {
+            _deviantartService = client;
+            _dialogCoordinator = dialogCoordinator;
             _dialogService = service;
+            downloadViewItems = CollectionViewSource.GetDefaultView(_downloadList);
             RemoveDeviantFromListCommand = new RelayCommand(o => {
                 RemoveDeviantFromList(o as string ?? "");
             }, o => !IsDownloading);
 
             ClearListCommand = new RelayCommand(o => {
                 ClearList();
-            }, o => !IsDownloading && DownloadList.Count > 0);
-
-            ClearCompletedFromListCommand = new RelayCommand(o => {
-                ClearCompletedFromList();
-            }, o => !IsDownloading && DownloadList.Where(o => o.Status == DownloadStatus.Completed).ToList().Count > 0);
+            }, o => !IsDownloading && DownloadList.Where(o=>o.IsSelected).ToList().Count > 0);
 
             GetDestinationPathCommand = new RelayCommand(o => {
                 GetDownloadPath();
@@ -121,9 +157,33 @@ namespace DeviantartDownloader.ViewModels {
                 ShowSettingDialog();
             }, o => !IsDownloading);
 
-            DonwloadDeviantCommand = new RelayCommand(async o => {
+            DownloadDeviantCommand = new RelayCommand(async o => {
                 await DownloadDeviant();
             }, o => { return DownloadList.Where(o => o.Status != DownloadStatus.Completed).ToList().Count > 0; });
+
+            SelectAllArtCommand = new RelayCommand(o => {
+                SelectDeviantType(DeviantType.Art);
+            }, o => !IsDownloading && DownloadList.Count>0);
+
+            SelectAllLiteratureCommand = new RelayCommand(o => {
+                SelectDeviantType(DeviantType.Literature);
+            }, o => !IsDownloading && DownloadList.Count > 0);
+
+            SelectAllVideoCommand = new RelayCommand(o => {
+                SelectDeviantType(DeviantType.Video);
+            }, o => !IsDownloading && DownloadList.Count > 0);
+
+            SelectAllCompletedCommand = new RelayCommand(o => {
+                SelectDeviantStatus(DownloadStatus.Completed);
+            }, o => !IsDownloading && DownloadList.Count > 0);
+
+            SelectAllFailCommand = new RelayCommand(o => {
+                SelectDeviantStatus(DownloadStatus.Fail);
+            }, o => !IsDownloading && DownloadList.Count > 0);
+
+            ToDeviantartCommand= new RelayCommand(o => {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.deviantart.com/") { UseShellExecute = true });
+            }, o => true);
         }
 
         private void RemoveDeviantFromList(string Id) {
@@ -133,13 +193,11 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
         private void ClearList() {
-            DownloadList.Clear();
-        }
-        private void ClearCompletedFromList() {
-            foreach(var deviant in DownloadList.Where(o => o.Status == DownloadStatus.Completed).ToList()) {
+            foreach(var deviant in DownloadList.Where(d => d.IsSelected).ToList()) {
                 DownloadList.Remove(deviant);
             }
         }
+        
         private void GetDownloadPath() {
             var folderDialog = new OpenFolderDialog {
                 Title = "Select Folder",
@@ -152,11 +210,12 @@ namespace DeviantartDownloader.ViewModels {
                 DestinationPath = folderName;
             }
         }
-        private void ShowSearchGalleryDialog() {
-            var viewModel = _dialogService.ShowDialog<GetGalleryViewModel>(new GetGalleryViewModel(DeviantartService));
 
+        private void ShowSearchGalleryDialog() {
+            var viewModel = _dialogService.ShowDialog<GetGalleryViewModel>(new GetGalleryViewModel(_deviantartService,_dialogCoordinator));
+            
             if(viewModel.Success) {
-                foreach(var deviant in viewModel.Deviants) {
+                foreach(var deviant in viewModel.deviantViewItems.Cast<Deviant>().ToList()) {
                     var downloadableDeviant = DownloadList.FirstOrDefault(o => o.Deviant.Id == deviant.Id);
                     if(downloadableDeviant == null) {
                         DownloadList.Add(new(deviant));
@@ -166,24 +225,20 @@ namespace DeviantartDownloader.ViewModels {
                         downloadableDeviant.Status = DownloadStatus.Waiting;
                         downloadableDeviant.DownloadSpeed = "";
                     }
-
                 }
             }
         }
         private void ShowSettingDialog() {
-            var viewModel = _dialogService.ShowDialog<SettingViewModel>(new SettingViewModel(_headerString, _queueLimit));
+            var viewModel = _dialogService.ShowDialog<SettingViewModel>(new SettingViewModel(_headerString, _queueLimit,_dialogCoordinator));
             if(viewModel.Success) {
                 _headerString = viewModel.HeaderString;
                 _queueLimit = int.Parse(viewModel.QueueLimit);
             }
-
-
         }
         private async Task DownloadDeviant() {
             if(!IsDownloading) {
-
                 if(!Directory.Exists(DestinationPath)) {
-                    MessageBox.Show("Path not found!", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    await _dialogCoordinator.ShowMessageAsync(this, "ERROR", "Path not found!");
                     return;
                 }
                 DownloadLabel = "Cancel";
@@ -191,11 +246,9 @@ namespace DeviantartDownloader.ViewModels {
                 var downloadQueue = new ConcurrentQueue<DownloadableDeviant>(DownloadList);
                 var throttler = new SemaphoreSlim(_queueLimit);
                 var tasks = new List<Task>();
-                using var client = new HttpClient();
                 int literatureCount = 0;
                 try {
-                    foreach(var deviant in downloadQueue) {
-
+                    foreach(var deviant in downloadViewItems.Cast<DownloadableDeviant>().ToList()) {
                         if(deviant.Status != DownloadStatus.Completed) {
                             await throttler.WaitAsync(cts.Token);
                             tasks.Add(Task.Run(async () => {
@@ -203,49 +256,57 @@ namespace DeviantartDownloader.ViewModels {
                                     if(deviant.Deviant.Type == DeviantType.Literature) {
                                         literatureCount += 1;
                                     }
-                                    await DeviantartService.DonwloadDeviant(deviant, cts, DestinationPath, _headerString, literatureCount);
+                                    await _deviantartService.DonwloadDeviant(deviant, cts, DestinationPath, _headerString, literatureCount);
                                 }
                                 catch(Exception ex) {
 
                                 }
                                 finally {
-                                  
-                                   
                                     throttler.Release();
                                 }
                             }, cts.Token));
                         }
                     }
-
                     await Task.WhenAll(tasks);
-
-                    var test = DownloadList.ToList();
-                    DownloadList.Clear();
-                    foreach(var d in test) {
-                        DownloadList.Add(d);
-                    }
                     IsDownloading = false;
                     DownloadLabel = "Download";
+                    await _dialogCoordinator.ShowMessageAsync(this, "ALERT", "Donwload completed!");
                 }
                 catch {
-
                 }
-                finally {
-                    MessageBox.Show("Download completed!", "Download", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-                }
-
             }
             else {
                 cts.Cancel();
                 DownloadLabel = "Download";
                 IsDownloading = false;
-                var test = DownloadList.ToList();
-                DownloadList.Clear();
-                foreach(var d in test) {
-                    DownloadList.Add(d);
-                }
                 cts = new CancellationTokenSource();
-                MessageBox.Show("Opperation canceled", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                await _dialogCoordinator.ShowMessageAsync(this, "ALERT", "Cancel download!");
+            }
+        }
+        private void SelectDeviantType(DeviantType deviantType) {
+            var list = DownloadList.Where(o => o.Deviant.Type == deviantType).ToList();
+            if(list.Count == DownloadList.Count) {
+                IsSelectAll = true;
+            }
+            else {
+                foreach(var download in DownloadList) {
+                    if(download.Deviant.Type == deviantType) {
+                        download.IsSelected = true;
+                    }
+                }
+            }
+        }
+        private void SelectDeviantStatus(DownloadStatus status) {
+            var list = DownloadList.Where(o => o.Status == status).ToList();
+            if(list.Count == DownloadList.Count) {
+                IsSelectAll = true;
+            }
+            else {
+                foreach(var download in DownloadList) {
+                    if(download.Status == status) {
+                        download.IsSelected = true;
+                    }
+                }
             }
         }
     }

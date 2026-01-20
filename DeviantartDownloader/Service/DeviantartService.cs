@@ -1,8 +1,11 @@
-﻿using DeviantartDownloader.DTOs;
+﻿using ControlzEx.Standard;
+using DeviantartDownloader.DTOs;
 using DeviantartDownloader.Extension;
 using DeviantartDownloader.Models;
 using DeviantartDownloader.Models.Enum;
+using DeviantartDownloader.ViewModels;
 using HtmlAgilityPack;
+using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -15,8 +18,6 @@ using System.Security.Policy;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using System.Windows;
-using System.Windows.Input;
 
 namespace DeviantartDownloader.Service {
     public class DeviantartService {
@@ -43,11 +44,11 @@ namespace DeviantartDownloader.Service {
                 return false;
             }
         }
-        public async Task<ICollection<GalleryFolder>> GetFolders(string userName, CancellationTokenSource cts) {
+        public async Task<ICollection<GalleryFolder>> GetFolders(string userName, CancellationTokenSource cts,IDialogCoordinator dialogCoordinator,ViewModel view) {
 
             try {
                 if(!await GetAccessToken())
-                    throw new Exception("Fail autho");
+                    throw new Exception("Fail authenticate");
 
                 int? offSet = 0;
                 bool hasMore = true;
@@ -73,29 +74,29 @@ namespace DeviantartDownloader.Service {
                                                 .OrderBy(o => o.Name)
                                                 .ToList();
                 if(folders.Count > 0) {
-                    MessageBox.Show("Search completed", "Action completed", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                    await dialogCoordinator.ShowMessageAsync(view, "ALERT", "Search completed!", MessageDialogStyle.Affirmative);
                 }
                 return folders;
             }
             catch(TaskCanceledException ex) {
                 if(ex.CancellationToken == cts.Token) {
-                    MessageBox.Show("Operation canceled", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await dialogCoordinator.ShowMessageAsync(view, "ALERT", "Operation canceled!", MessageDialogStyle.Affirmative);
                 }
                 else {
-                    MessageBox.Show("Timeout", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    await dialogCoordinator.ShowMessageAsync(view, "ERROR", "Timeout!", MessageDialogStyle.Affirmative);
                 }
                 return [];
             }
             catch(Exception ex) {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                await dialogCoordinator.ShowMessageAsync(view, "ERROR", ex.Message, MessageDialogStyle.Affirmative);
                 return [];
             }
         }
-        public async Task<ICollection<Deviant>> GetDeviants(string userName, string folderId, CancellationTokenSource cts) {
+        public async Task<ICollection<Deviant>> GetDeviants(string userName, string folderId, CancellationTokenSource cts, IDialogCoordinator dialogCoordinator, ViewModel view) {
 
             try {
                 if(!await GetAccessToken())
-                    throw new Exception("Fail autho");
+                    throw new Exception("Fail authenticate");
 
                 int? offSet = 0;
                 bool hasMore = true;
@@ -110,6 +111,7 @@ namespace DeviantartDownloader.Service {
 
                         throw new Exception(result.error_description);
                     }
+                  
                     hasMore = result.has_more ?? false;
                     offSet = result.next_offset;
                     contents.AddRange(result.results ?? []);
@@ -138,22 +140,24 @@ namespace DeviantartDownloader.Service {
                                                                          .ToList()
                                                                      : null,
                                     Donwloadable = o.is_downloadable ?? false,
-                                    Type = TypeValidation(o)
+                                    Type = TypeValidation(o),
+                                    PublishDate= DateTimeOffset.FromUnixTimeSeconds(long.Parse(o.published_time)).Date
                                 })
+                                .OrderBy(o=>o.PublishDate)
                                 .ToList();
                 return deviants;
             }
             catch(TaskCanceledException ex) {
                 if(ex.CancellationToken == cts.Token) {
-                    MessageBox.Show("Operation canceled", "Information", MessageBoxButton.OK, MessageBoxImage.Information);
+                    await dialogCoordinator.ShowMessageAsync(view, "ALERT", "Operation canceled!", MessageDialogStyle.Affirmative);
                 }
                 else {
-                    MessageBox.Show("Timeout", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    await dialogCoordinator.ShowMessageAsync(view, "ERROR", "Timeout!", MessageDialogStyle.Affirmative);
                 }
                 return [];
             }
             catch(Exception ex) {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                await dialogCoordinator.ShowMessageAsync(view, "ERROR", ex.Message, MessageDialogStyle.Affirmative);
                 return [];
             }
         }
@@ -182,15 +186,14 @@ namespace DeviantartDownloader.Service {
                             var downloadContent = JsonSerializer.Deserialize<Response_GetDonwloadContent>(jsonResponse);
 
                             if(downloadContent.error != null) {
-                                MessageBox.Show(downloadContent.error_description, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 throw new Exception(downloadContent.error_description);
                             }
 
-                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, downloadContent.filename), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("dd-MM-yyyy")}] "+downloadContent.filename), FileMode.Create, FileAccess.Write, FileShare.None)) {
                                 await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
                             }
-
                             content.Status = DownloadStatus.Completed;
+                            content.Percent = 1;
                         }
                         else {
                             FileType imgType = GetFileType(content.Deviant.Content.Src);
@@ -198,11 +201,12 @@ namespace DeviantartDownloader.Service {
                                 throw new Exception("Unknow File Type");
                             }
 
-                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("dd-MM-yyyy")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
                                 await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
                             }
 
                             content.Status = DownloadStatus.Completed;
+                            content.Percent = 1;
                         }
                         break;
 
@@ -213,11 +217,12 @@ namespace DeviantartDownloader.Service {
                             throw new Exception("Unknow File Type");
                         }
 
-                        using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                        using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("dd-MM-yyyy")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
                             await _httpClient.DownloadAsync(video.Src, file, Speed, Progress, cts.Token);
                         }
 
                         content.Status = DownloadStatus.Completed;
+                        content.Percent = 1;
                         break;
 
                     case DeviantType.Literature:
@@ -246,20 +251,17 @@ namespace DeviantartDownloader.Service {
                                 var htmlDoc = new HtmlDocument();
                                 htmlDoc.LoadHtml(htmlContent);
 
-
-                                var node = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
+                                var literatureText = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
                                 progress.Report(0.75f);
 
-                                string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"{GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username}.html");
-                                HtmlNode textContent = node[1].InnerText.Contains("Badge Awards") ? node[2] : node[1];
+                                string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("dd-MM-yyyy")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username}.html");
+                                HtmlNode textContent = literatureText[1].InnerText.Contains("Badge Awards") ? literatureText[2] : literatureText[1];
                                 textContent.RemoveChild(textContent.ChildNodes[0], false);
-                                await File.WriteAllTextAsync(filePath, CreateHTMLFile(content.Deviant.Title, textContent.OuterHtml), cts.Token);
+                                await File.WriteAllTextAsync(filePath, CreateHTMLFile(content.Deviant.Title, textContent), cts.Token);
                                 progress.Report(1);
 
                                 content.Status = DownloadStatus.Completed;
                             }
-
-
                         }
                         break;
                 }
@@ -309,7 +311,18 @@ namespace DeviantartDownloader.Service {
             }
             return FileType.unknown;
         }
-        private string CreateHTMLFile(string title,string outerHTML) {
+        private string CreateHTMLFile(string title, HtmlNode node) {
+            var figureCheck = node.SelectNodes(".//figure")?.ToList();
+            if(figureCheck != null) {
+                foreach(var f in figureCheck) {
+                    f.AddClass("quoTVs");
+                    var section = f.SelectSingleNode(".//section");
+                    if(section != null) {
+                        section.RemoveChild(section.FirstChild, false);
+                    }
+                }
+            }
+
             return $@"
                     <html>
                     <head>
@@ -318,37 +331,37 @@ namespace DeviantartDownloader.Service {
                               *::selection{{
                                  background-color: #00c787;
                               }}
+
                               body {{
                                  background-color: #d2decc;
-                                 font-size: 1.3em;
                                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                               }}
 
-                              p {{
-                                 font-weight: 450;
+                              .title {{
+                                 text-align: center;
+                                 letter-spacing: 0.2em;
+                                 font-size: 2.5em;
+                              }}
+
+                              .content {{
+                                 padding: 10px 25px;
+                                 font-size: 1.5em;
                               }}
 
                               .quoTVs {{
                                  border: 1px solid #a8b2a7;
                                  justify-self: center;
-                                 padding: 20px;
+                                 padding:50px 30px;
                                  display: flex;
                                  justify-content: center;
                                  background-color: #dde6d9;
-
+								 font-weight:450;
+								 
                                  a {{
                                     font-size: 1em;
                                     color: rgb(0, 0, 0);
                                     text-decoration: none;
                                  }}
-                              }}
-                              .title {{
-                                 text-align: center;
-                                 letter-spacing: 0.2em;
-                              }}
-
-                              .content {{
-                                 padding: 10px 25px;
                               }}
 						 </style>
                     </head>
@@ -356,7 +369,7 @@ namespace DeviantartDownloader.Service {
                        <h1 class='title'>{title}</h1>
                        <hr/>
                        <div class='content'>
-                            {outerHTML} 
+                            {node.OuterHtml} 
                        </div> 
                     </body>
                     </html>";
