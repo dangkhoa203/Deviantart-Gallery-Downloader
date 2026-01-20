@@ -24,7 +24,7 @@ You can download the latest version at [here](https://github.com/dangkhoa203/Dev
 <img width="1000" height="625" alt="image" src="https://github.com/user-attachments/assets/562200b7-d78d-4329-b2c1-52f29cdad03f" />
 <img width="1000" height="625" alt="image" src="https://github.com/user-attachments/assets/fe811249-39f8-403b-b1e9-36af9562ca70" />
 4. Literature content
-   <img width="1898" height="832" alt="image" src="https://github.com/user-attachments/assets/ea8a154f-6060-4eae-bf29-288434737dd4" />
+   <img width="1899" height="1007" alt="image" src="https://github.com/user-attachments/assets/643a25b7-6603-49df-8800-59ee5f820ebe" />
 
 
 
