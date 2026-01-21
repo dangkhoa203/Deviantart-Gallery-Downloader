@@ -12,15 +12,15 @@ You can download the latest version at [here](https://github.com/dangkhoa203/Dev
 <img width="1440" height="938" alt="image" src="https://github.com/user-attachments/assets/59ccfd9e-d8ac-461b-aa42-f6113f0eef20" />
 
 2. Gallery search
-  <img width="1440" height="1000" alt="image" src="https://github.com/user-attachments/assets/ed9144c1-1f1d-45a2-a658-785569796930" />
+<img width="1440" height="1000" alt="image" src="https://github.com/user-attachments/assets/ed9144c1-1f1d-45a2-a658-785569796930" />
 <img width="1440" height="1000" alt="image" src="https://github.com/user-attachments/assets/65af7563-fb0f-4dc9-a54a-3cf7348acebc" />
 <img width="1440" height="1000" alt="image" src="https://github.com/user-attachments/assets/10f53045-37da-47bc-a3e3-3cf555d74a11" />
 
-3. setting
+3. Setting
 <img width="1000" height="625" alt="image" src="https://github.com/user-attachments/assets/562200b7-d78d-4329-b2c1-52f29cdad03f" />
 
 4. Literature content
-   <img width="1899" height="1007" alt="image" src="https://github.com/user-attachments/assets/643a25b7-6603-49df-8800-59ee5f820ebe" />
+<img width="1899" height="1007" alt="image" src="https://github.com/user-attachments/assets/643a25b7-6603-49df-8800-59ee5f820ebe" />
 
 
 
