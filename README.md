@@ -4,7 +4,6 @@ You can download the latest version at [here](https://github.com/dangkhoa203/Dev
 * **🖼️ High-Resolution Downloads:** Automatically bypasses thumbnails to fetch the original, full-sized image.
 * **📂 Full Gallery Archival:** Download entire galleries, scraps, or specific folders in one go.
 * **⚡ Asynchronous Performance:** Built with async for multi-threaded, lightning-fast downloads.
-* **🔐 Mature Content Support:** Integrated cookie support allows you to download age-restricted content securely.
 * **📝 Literature Downloading:** Save literature into a html file.
 # Usage Example
 1. Home menu
