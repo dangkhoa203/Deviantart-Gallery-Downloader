@@ -9,13 +9,13 @@
                     xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
                     mc:Ignorable="d"
                     Background="#d4dfd0" WindowStartupLocation="CenterScreen" WindowTitleBrush="#06070d"
-                    BorderBrush="Black" Icon="/Icon/Icon.ico" ShowIconOnTitleBar="False"
+                    BorderBrush="Black" ShowIconOnTitleBar="False"
                     Title="Search Gallery" MinHeight="800" MinWidth="1000"
                     Dialog:DialogParticipation.Register="{Binding}">
     <mah:MetroWindow.Resources>
         <CollectionViewSource x:Key="deviantViewItems" Source="{Binding Deviants}"/>
     </mah:MetroWindow.Resources>
-    <Grid RowDefinitions="100,100,60,*,50">
+    <Grid RowDefinitions="100,120,60,*,50">
         <Grid VerticalAlignment="Top" 
               Grid.Row="0" 
               Margin="20,10,10,10"
@@ -23,7 +23,12 @@
             <StackPanel Grid.Column="0">
                 <Label Content="Search from username:"
                        Target="{Binding ElementName=textUsername}" />
-                <TextBox Name="textUsername" Background="#f4f7f3"
+                <TextBox mah:ControlsHelper.FocusBorderBrush="#93a98f"
+                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+                         mah:ControlsHelper.CornerRadius="4"
+                         Name="textUsername" Background="#e9f0e6"
+                         Foreground="#337287" FontWeight="SemiBold"
+                         BorderBrush="#93a98f"
                          Height="35" FontSize="18"
                          Text="{Binding SearchUserName,UpdateSourceTrigger=PropertyChanged}"
                          Margin="20,0,20,0">
@@ -57,15 +62,22 @@
             <Label Content="User folder" 
                    Target="{Binding ElementName=cbFolder}" />
             <Grid  Margin="20,0,20,10"
-                   ColumnDefinitions="90,*,100">
+                   ColumnDefinitions="120,*,100">
                 <TextBlock Grid.Column="0" 
+                           VerticalAlignment="Bottom"
                            Margin="0,0,10,0"
+                           FontSize="16"
                            Text="Selected user: "/>
                 <TextBlock Grid.Column="1"
-                           Margin="10,0,0,0" 
+                           Margin="10,0,0,0"
+                           FontSize="26"
+                           FontWeight="DemiBold"
+                           Foreground="{Binding TileBrush}"
                            Text="{Binding SelectedUsername}"/>
                 <Button Grid.Column="2"
                         Cursor="Hand"
+                        BorderBrush="#93a98f"
+                        BorderThickness="2"
                         Command="{Binding ResetUserCommand ,UpdateSourceTrigger=PropertyChanged}" >
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="Reset" 
@@ -79,14 +91,18 @@
                 </Button>
             </Grid>
             <ComboBox mah:TextBoxHelper.Watermark="Empty"
+                      mah:ControlsHelper.CornerRadius="4"
+                      Foreground="#337287"
                       ItemsSource="{Binding SearchResultFolders}"
                       SelectedItem="{Binding SelectedFolder,Mode=TwoWay}"                
                       IsEnabled="{Binding IsComboBoxEnabled}"
                       DisplayMemberPath="DisplayName"
+                      FontSize="16"
+                      BorderBrush="#93a98f"
                       SelectedValuePath="Id"
                       Margin="20,0,20,0"
-                      Cursor="Hand"
-                      Background="#f4f7f3"
+                      Cursor="Hand" FontWeight="SemiBold"
+                      Background="#e9f0e6"
                       IsSynchronizedWithCurrentItem="True"
                       Name="cbFolder"/>
         </StackPanel>
@@ -110,7 +126,8 @@
                     mah:ControlsHelper.ContentCharacterCasing="Upper"
                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
                     mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                    Command="{Binding SelectAllArtCommand}" 
+                    Command="{Binding SelectAllArtCommand}"
+                    BorderBrush="#93a98f"
                     Foreground="#337287" Cursor="Hand"
                     Margin="0,0,0,20" Height="30"
                     Content="Select all art"/>
@@ -118,7 +135,8 @@
                     mah:ControlsHelper.ContentCharacterCasing="Upper"
                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
                     mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                    Command="{Binding SelectAllLiteratureCommand}"                    
+                    Command="{Binding SelectAllLiteratureCommand}"
+                    BorderBrush="#93a98f"
                     Foreground="#337287" Cursor="Hand"
                     Margin="0,0,0,20" Height="30"
                     Content="Select all literature"/>
@@ -127,6 +145,7 @@
                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
                     mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
                     Command="{Binding SelectAllVideoCommand}"
+                    BorderBrush="#93a98f"
                     Cursor="Hand" Foreground="#337287"
                     Margin="0,0,0,20" Height="30"
                     Content="Select all video"/>
@@ -134,6 +153,7 @@
                     mah:ControlsHelper.ContentCharacterCasing="Upper"
                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
                     mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+                    BorderBrush="#93a98f"
                     Command="{Binding ClearListCommand}"
                     Background="#e18d43" Foreground="Black"
                     Cursor="Hand" Margin="0,0,0,20" 
@@ -144,8 +164,9 @@
                 <mah:Badged BadgePlacementMode="TopLeft" 
                             Badge="{Binding Deviants.Count}">
                     <DataGrid   ItemsSource="{Binding Deviants}" 
-                                Background="#f4f7f3" BorderBrush="Black"  
-                                RowBackground="#f4f7f3" Margin="0,0,0,0" 
+                                Background="#e9f0e6" BorderBrush="#93a98f"
+                                BorderThickness="1"
+                                RowBackground="#e9f0e6" Margin="0,0,0,0" 
                                 CanUserAddRows="False" ColumnHeaderHeight="40" RowHeight="40" 
                                 AutoGenerateColumns="False" SelectionMode="Single" 
                                 SelectionUnit="Cell" CanUserResizeRows="False">

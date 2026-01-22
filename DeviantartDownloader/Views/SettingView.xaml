@@ -10,22 +10,28 @@
                     d:DataContext="{d:DesignInstance Type=vm:SettingViewModel}"
                     mc:Ignorable="d"
                     Title="Setting" Height="500"  ResizeMode="NoResize" Width="800" 
-                    Icon="/Icon/Icon.ico" ShowIconOnTitleBar="False"
+                    ShowIconOnTitleBar="False"
                     WindowStartupLocation="CenterScreen" WindowTitleBrush="#06070d"
                     Background="#d4dfd0" BorderBrush="Black"
                     Dialog:DialogParticipation.Register="{Binding}">
-    <Grid RowDefinitions="375,30,60">
+    <Grid RowDefinitions="375,35,60">
         <Grid Grid.Row="0">
             <StackPanel Grid.Column="0" 
                         Margin="20,0,20,0"  >
                 <Label Target="{Binding ElementName=txtContent}" 
                        Content="Header string:"  />
-                <TextBox    Text="{Binding HeaderString,UpdateSourceTrigger=PropertyChanged}" 
-                            Name="txtContent" Background="White" 
-                            ScrollViewer.VerticalScrollBarVisibility="Auto"
-                            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                            TextWrapping="Wrap"
-                            Height="325" FontSize="18" Margin="0,0,0,0"/>
+                <TextBox mah:ControlsHelper.FocusBorderBrush="#93a98f"
+                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+                         mah:ControlsHelper.CornerRadius="4"
+                         Text="{Binding HeaderString,UpdateSourceTrigger=PropertyChanged}" 
+                         Name="txtContent"
+                         BorderBrush="#93a98f"
+                         Foreground="#337287" FontWeight="DemiBold"
+                         Background="#e9f0e6" FontStretch="ExtraExpanded"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         TextWrapping="Wrap"
+                         Height="325" FontSize="18" Margin="0,0,0,0"/>
             </StackPanel>
         </Grid>
         <Grid Grid.Row="1" 
@@ -34,13 +40,21 @@
             <TextBlock Grid.Column="0" 
                        VerticalAlignment="Center" 
                        Text="Queue limit:"/>
-            <TextBox Text="{Binding QueueLimit,UpdateSourceTrigger=PropertyChanged}" 
-                     Grid.Column="1" MaxLength="1" 
-                     Width="40" Height="20" 
+            <TextBox Grid.Column="1"
+                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
+                     mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+                     mah:ControlsHelper.CornerRadius="4"
+                     Text="{Binding QueueLimit,UpdateSourceTrigger=PropertyChanged}" 
+                     MaxLength="1"
+                     BorderBrush="#93a98f"
+                     Foreground="#337287"
+                     Background="#e9f0e6"
+                     Width="40" Height="30" FontWeight="Bold"
+                     FontSize="16" TextAlignment="Center"
                      HorizontalAlignment="Left" VerticalAlignment="Top" 
                      PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" />
             <TextBlock Grid.Column="2" 
-                       VerticalAlignment="Center" Margin="5,0,0,0"
+                       VerticalAlignment="Center" Margin="0,0,0,0"
                        Text="Concurrent download"/>
         </Grid>
         <Grid Grid.Row="2" 

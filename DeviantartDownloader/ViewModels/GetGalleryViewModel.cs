@@ -10,6 +10,7 @@ using System.ComponentModel;
 using System.Text;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace DeviantartDownloader.ViewModels {
     public class GetGalleryViewModel : DialogViewModel {
@@ -159,6 +160,17 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
 
+        private Brush _tileBrush=Brushes.Red;
+        public Brush TileBrush {
+            get {
+                return _tileBrush;
+            }
+            set {
+                _tileBrush = value;
+                OnPropertyChanged(nameof(TileBrush));
+            }
+        }
+
         public RelayCommand GetFolderCommand {
             get; set;
         }
@@ -191,6 +203,7 @@ namespace DeviantartDownloader.ViewModels {
             _deviantartService = service;
             _dialogCoordinator= dialogCoordinator;
             deviantViewItems = CollectionViewSource.GetDefaultView(_deviants);
+
             RemoveDeviantFromListCommand = new RelayCommand(o => {
                 RemoveDeviantFromList(o as string ?? "");
             }, o => !LoadingSearchDeviant);
@@ -249,6 +262,7 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
         private void ResetSearch() {
+            TileBrush = Brushes.Red;
             SelectedFolder = null;
             SelectedUsername = "Not selected";
             SearchResultFolders.Clear();
@@ -274,6 +288,7 @@ namespace DeviantartDownloader.ViewModels {
                         ResetSearch();
                         GalleryFolder allFolder = new("", "All", 0);
                         SelectedUsername = SearchUserName;
+                        TileBrush = Brushes.Green;
                         SearchResultFolders.Clear();
                         SearchResultFolders.Add(allFolder);
                         IsSearchable = false;
@@ -285,6 +300,7 @@ namespace DeviantartDownloader.ViewModels {
                         IsComboBoxEnabled = true;
                     }
                     SearchFolderLabel = "Search";
+
                     LoadingSearchFolder = false;
                 }
             }
