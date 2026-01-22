@@ -10,7 +10,7 @@
                     xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
                     Dialog:DialogParticipation.Register="{Binding}"
                     mc:Ignorable="d"
-                    Icon="/Icon/Icon.ico" ShowIconOnTitleBar="False"
+                    ShowIconOnTitleBar="False"
                     Title="Deviantart Downloader" MinHeight="750" MinWidth="1000"
                     Background="#d4dfd0" WindowTitleBrush="#06070d"
                     WindowStartupLocation="CenterScreen" BorderBrush="Black">
@@ -60,7 +60,7 @@
             </Button>
             <Button Command="{Binding ShowKeySettingDialogCommand}"
                     Cursor="Hand"
-                    ToolTip="Setting"
+                    ToolTip="Key Setting"
                     Content=""> 
                 <Button.ContentTemplate>
                     <DataTemplate>
@@ -77,7 +77,7 @@
             </Button>
         </mah:WindowCommands>
     </mah:MetroWindow.RightWindowCommands>
-    <Grid RowDefinitions="80,50,*,50,50">
+    <Grid RowDefinitions="100,50,*,50,50">
         <Grid Grid.Row="0" 
               ColumnDefinitions="*,200"
               VerticalAlignment="Top" 
@@ -85,11 +85,16 @@
             <StackPanel Grid.Column="0">
                 <Label Target="{Binding ElementName=txtPath}" 
                        Content="Path:"/>
-                <TextBox IsReadOnly="{Binding IsDownloading,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}"
+                <TextBox mah:ControlsHelper.FocusBorderBrush="#93a98f"
+                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+                         mah:ControlsHelper.CornerRadius="4"
+                         IsReadOnly="{Binding IsDownloading,UpdateSourceTrigger=PropertyChanged,Mode=TwoWay}"
                          Text="{Binding DestinationPath}"
-                         Background="White"
+                         Foreground="#337287"
+                         Background="#e9f0e6"
+                         BorderBrush="#93a98f"
                          Margin="0,0,20,0"
-                         Height="30" FontSize="18"
+                         Height="40" FontSize="20"
                          Name="txtPath"/>
             </StackPanel>
             <Button mah:ControlsHelper.CornerRadius="2"
@@ -100,6 +105,7 @@
                     BorderBrush="#93a98f"
                     BorderThickness="2"
                     FontSize="16"
+                    VerticalAlignment="Bottom"
                     Cursor="Hand">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock  Text="Select" 
@@ -134,6 +140,7 @@
                 <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
                         mah:ControlsHelper.FocusBorderBrush="#93a98f"
                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+                        BorderBrush="#93a98f"
                         Command="{Binding SelectAllArtCommand}"
                         Foreground="#337287"
                         Cursor="Hand"
@@ -143,6 +150,7 @@
                         mah:ControlsHelper.FocusBorderBrush="#93a98f"
                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
                         Command="{Binding SelectAllLiteratureCommand}"
+                        BorderBrush="#93a98f"
                         Foreground="#337287"
                         Cursor="Hand"
                         Margin="0,0,0,20" 
@@ -152,6 +160,7 @@
                         mah:ControlsHelper.FocusBorderBrush="#93a98f"
                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
                         Command="{Binding SelectAllVideoCommand}"
+                        BorderBrush="#93a98f"
                         Foreground="#337287"
                         Cursor="Hand"
                         Margin="0,0,0,20" 
@@ -161,6 +170,7 @@
                         mah:ControlsHelper.FocusBorderBrush="#93a98f"
                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
                         Command="{Binding SelectAllCompletedCommand}"
+                        BorderBrush="#93a98f"
                         Foreground="#337287"
                         Cursor="Hand"    
                         Margin="0,0,0,20"
@@ -168,7 +178,8 @@
                 <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
                         mah:ControlsHelper.FocusBorderBrush="#93a98f"
                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                        Command="{Binding SelectAllFailCommand}"        
+                        Command="{Binding SelectAllFailCommand}"
+                        BorderBrush="#93a98f"
                         Foreground="#337287"
                         Cursor="Hand"  
                         Margin="0,0,0,20"
@@ -176,7 +187,8 @@
                 <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
                         mah:ControlsHelper.FocusBorderBrush="#93a98f"
                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                        Command="{Binding ClearListCommand}"  
+                        Command="{Binding ClearListCommand}"
+                        BorderBrush="#93a98f"
                         Foreground="Black"
                         Background="#e18d43"
                         Cursor="Hand"  
@@ -187,8 +199,8 @@
                         BadgePlacementMode="TopLeft" Badge="{Binding DownloadList.Count}"
                         Margin="20,20,20,0" >
                 <DataGrid ItemsSource="{Binding DownloadList,  UpdateSourceTrigger=PropertyChanged}"
-                          Background="#f4f7f3" BorderBrush="Black" RowBackground="#f4f7f3" 
-                          CanUserAddRows="False" ColumnHeaderHeight="40" RowHeight="40"
+                          Background="#e9f0e6" BorderBrush="#93a98f" BorderThickness="1"
+                          RowBackground="#e9f0e6" CanUserAddRows="False" ColumnHeaderHeight="40" RowHeight="40"
                           AutoGenerateColumns="False" SelectionMode="Single" 
                           SelectionUnit="Cell" CanUserResizeRows="False">
                     <DataGrid.ColumnHeaderStyle>
@@ -261,7 +273,7 @@
             </mah:Badged>
         </Grid>
         <Grid Grid.Row="3" Margin="0,0,0,0">
-            <mah:MetroProgressBar IsIndeterminate="{Binding IsDownloading}"/>
+            <mah:MetroProgressBar Background="#d4dfd0" IsIndeterminate="{Binding IsDownloading}"/>
         </Grid>
         <Grid Grid.Row="4">
             <Button Grid.Row="5" 

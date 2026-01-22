@@ -46,13 +46,13 @@ namespace DeviantartDownloader.ViewModels {
         }
 
         private Brush _tileBrush;
-        public Brush TitleBrush {
+        public Brush TileBrush {
             get {
                 return _tileBrush;
             }
             set {
                 _tileBrush=value;
-                OnPropertyChanged(nameof(TitleBrush));
+                OnPropertyChanged(nameof(TileBrush));
             }
         }
 
@@ -80,7 +80,7 @@ namespace DeviantartDownloader.ViewModels {
             _service = service;
             CanDelete = _service.RefreshToken != null;
             Status = CanDelete ? "Currently using user key" :"Not using user key";
-            TitleBrush = CanDelete ? Brushes.Green:Brushes.Red;
+            TileBrush = CanDelete ? Brushes.Green:Brushes.Red;
 
             ToAuthorizeCommand = new RelayCommand(async o => {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.deviantart.com/oauth2/authorize?response_type=code&client_id=60309&scope=browse&redirect_uri=https://dangkhoa203.github.io/GetDeviantartCode") { UseShellExecute = true });
@@ -104,7 +104,7 @@ namespace DeviantartDownloader.ViewModels {
                 _service.KeyTime = null;
                 CanDelete = false;
                 Status =  "Not using user key";
-                TitleBrush = Brushes.Red;
+                TileBrush = Brushes.Red;
             }, o => CanDelete && !IsLoading);
         }
     }
