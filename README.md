@@ -11,6 +11,7 @@ You can download the latest version at [here](https://github.com/dangkhoa203/Dev
 To get the header string, you can use tools like [cookie extractor](https://chromewebstore.google.com/detail/cookies-extractor/gdbmkehljhmfcjgbjcfaklnabeccddna) or look up the cookie in the network tab in the DevTools console.
 
   With cookie extractor:
+  
   <img width="1825" height="898" alt="image" src="https://github.com/user-attachments/assets/b4c891f5-5828-4cf1-b94b-3d156b2a5524" />
 
   
