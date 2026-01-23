@@ -27,7 +27,7 @@ namespace DeviantartDownloader.ViewModels {
         private IDialogCoordinator _dialogCoordinator;
 
         private string _headerString = "";
-        private int _queueLimit { get; set; } = 2;
+        private int _queueLimit { get; set; } = 3;
         public ICollectionView downloadViewItems {
             get;
         }
