@@ -205,7 +205,7 @@
                             <DataGridTextColumn Header="Author"
                                                 Binding="{Binding Author.Username}"
                                                 IsReadOnly="True"
-                                                Foreground="Black" Width="120" />
+                                                Foreground="Black" Width="150" />
                             <DataGridTextColumn Binding="{Binding Title}" 
                                                 Header="Deviation Name" 
                                                 IsReadOnly="True"  
@@ -215,7 +215,7 @@
                                                 IsReadOnly="True" 
                                                 Foreground="Black"  Width="60" />
                             <DataGridTextColumn Header="Date" 
-                                                Binding="{Binding PublishDate,StringFormat='dd/MM/yyyy'}"  
+                                                Binding="{Binding PublishDate,StringFormat='d'}"  
                                                 IsReadOnly="True"
                                                 Foreground="Black" Width="80" />
                             <DataGridTemplateColumn Header="" 
@@ -243,7 +243,7 @@
                 mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
                 Command="{Binding SubmitToDownloadListCommand}"
                 Background="#00c787" Cursor="Hand"
-                BorderBrush="#93a98f" Name="Btn_Submit" Margin="10,0,10,10"
+                BorderBrush="#2b3635" Name="Btn_Submit" Margin="10,0,10,10"
                 BorderThickness="2" FontSize="18">
             <StackPanel Orientation="Horizontal">
                 <TextBlock  Text="Add to download list" 

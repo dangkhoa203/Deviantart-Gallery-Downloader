@@ -7,14 +7,15 @@
                     xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                     xmlns:vm="clr-namespace:DeviantartDownloader.ViewModels" 
                     xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+                    xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
                     d:DataContext="{d:DesignInstance Type=vm:SettingViewModel}"
                     mc:Ignorable="d"
-                    Title="Setting" Height="500"  ResizeMode="NoResize" Width="800" 
+                    Title="Setting" Height="650"  ResizeMode="NoResize" Width="800" 
                     ShowIconOnTitleBar="False"
                     WindowStartupLocation="CenterScreen" WindowTitleBrush="#06070d"
                     Background="#d4dfd0" BorderBrush="Black"
                     Dialog:DialogParticipation.Register="{Binding}">
-    <Grid RowDefinitions="375,35,60">
+    <Grid RowDefinitions="275,35,160,80,60">
         <Grid Grid.Row="0">
             <StackPanel Grid.Column="0" 
                         Margin="20,0,20,0"  >
@@ -31,7 +32,7 @@
                          ScrollViewer.VerticalScrollBarVisibility="Auto"
                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                          TextWrapping="Wrap"
-                         Height="325" FontSize="18" Margin="0,0,0,0"/>
+                         Height="225" FontSize="18" Margin="0,0,0,0"/>
             </StackPanel>
         </Grid>
         <Grid Grid.Row="1" 
@@ -57,7 +58,125 @@
                        VerticalAlignment="Center" Margin="0,0,0,0"
                        Text="Concurrent download"/>
         </Grid>
-        <Grid Grid.Row="2" 
+        <Grid Grid.Row="2"
+              RowDefinitions="50,35,35,35"
+              Margin="20,0,20,0">
+            <StackPanel  Grid.Row="0" Orientation="Horizontal">
+                <TextBlock Margin="0,0,0,10" FontSize="30" FontWeight="Bold">
+                    User key
+                </TextBlock>
+                <Button Command="{Binding UserKeyInfoCommand}"
+                        Style="{DynamicResource MahApps.Styles.Button.Circle}" 
+                        Background="#337287" BorderBrush="#2b3635" 
+                        Cursor="Hand" Width="25" Height="25" 
+                        Margin="10,0,0,0" >
+                    <iconPacks:PackIconFontAwesome Kind="InfoSolid" 
+                                                       Foreground="White"  
+                                                       VerticalAlignment="Center"/>
+                </Button>
+            </StackPanel>
+            
+            <Grid Grid.Row="1" 
+                  Margin="0,0,20,0"
+                  ColumnDefinitions="190,50,*">
+                <TextBlock Grid.Column="0" 
+               VerticalAlignment="Center" 
+               Text="Search folder request wait time:"/>
+                <TextBox Grid.Column="1"
+             mah:ControlsHelper.FocusBorderBrush="#93a98f"
+             mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+             mah:ControlsHelper.CornerRadius="4"
+             Text="{Binding FolderSearchWaitTime,UpdateSourceTrigger=PropertyChanged}" 
+             MaxLength="1"
+             BorderBrush="#93a98f"
+             Foreground="#337287"
+             Background="#e9f0e6"
+             Width="40" Height="30" FontWeight="Bold"
+             FontSize="16" TextAlignment="Center"
+             HorizontalAlignment="Left" VerticalAlignment="Top" 
+             PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" />
+                <TextBlock Grid.Column="2" 
+               VerticalAlignment="Center" Margin="0,0,0,0"
+               Text="Second"/>
+            </Grid>
+            <Grid Grid.Row="2" 
+      Margin="0,0,20,0"
+      ColumnDefinitions="190,50,*">
+                <TextBlock Grid.Column="0" 
+   VerticalAlignment="Center" 
+   Text="Search deviant request wait time:"/>
+                <TextBox Grid.Column="1"
+ mah:ControlsHelper.FocusBorderBrush="#93a98f"
+ mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+ mah:ControlsHelper.CornerRadius="4"
+ Text="{Binding DeviantSearchWaitTime,UpdateSourceTrigger=PropertyChanged}" 
+ MaxLength="1"
+ BorderBrush="#93a98f"
+ Foreground="#337287"
+ Background="#e9f0e6"
+ Width="40" Height="30" FontWeight="Bold"
+ FontSize="16" TextAlignment="Center"
+ HorizontalAlignment="Left" VerticalAlignment="Top" 
+ PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" />
+                <TextBlock Grid.Column="2" 
+   VerticalAlignment="Center" Margin="0,0,0,0"
+   Text="Second"/>
+            </Grid>
+            <Grid Grid.Row="3" 
+      Margin="0,0,20,0"
+      ColumnDefinitions="190,50,*">
+                <TextBlock Grid.Column="0" 
+   VerticalAlignment="Center" 
+   Text="Download original image wait time:"/>
+                <TextBox Grid.Column="1"
+ mah:ControlsHelper.FocusBorderBrush="#93a98f"
+ mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+ mah:ControlsHelper.CornerRadius="4"
+ Text="{Binding DeviantDownloadWaitTime,UpdateSourceTrigger=PropertyChanged}" 
+ MaxLength="1"
+ BorderBrush="#93a98f"
+ Foreground="#337287"
+ Background="#e9f0e6"
+ Width="40" Height="30" FontWeight="Bold"
+ FontSize="16" TextAlignment="Center"
+ HorizontalAlignment="Left" VerticalAlignment="Top" 
+ PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" />
+                <TextBlock Grid.Column="2" 
+   VerticalAlignment="Center" Margin="0,0,0,0"
+   Text="Second"/>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="3"
+              RowDefinitions="50,*"
+              Margin="20,0,20,0">
+            <StackPanel  Grid.Row="0" Orientation="Horizontal">
+                <TextBlock Margin="0,0,0,10" FontSize="30" FontWeight="Bold">
+                    Image Description
+                </TextBlock>
+                <Button Command="{Binding DescriptionInfoCommand}" Background="#337287" BorderBrush="#2b3635" Cursor="Hand" Width="25" Height="25" Margin="10,0,0,0" Style="{DynamicResource MahApps.Styles.Button.Circle}">
+                    <iconPacks:PackIconFontAwesome Kind="InfoSolid" 
+                                           Foreground="White"  
+                                           />
+                </Button>
+            </StackPanel>
+            <Grid Grid.Row="1"
+                  ColumnDefinitions="200,*">
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <CheckBox IsChecked="{Binding DownloadDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              Content="Download image description" 
+                              FlowDirection="LeftToRight"
+                              Margin="5,0,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <CheckBox IsChecked="{Binding DescriptionOnly, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                              IsEnabled="{Binding DownloadDescription}"
+                              Content="Only download image description"
+                              FlowDirection="LeftToRight"
+                              Margin="5,0,0,0" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="4" 
               Margin="10,10,10,10">
             <Button mah:ControlsHelper.CornerRadius="2"
                     mah:ControlsHelper.ContentCharacterCasing="Upper"

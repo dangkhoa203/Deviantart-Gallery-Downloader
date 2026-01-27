@@ -66,7 +66,7 @@ namespace DeviantartDownloader.Service {
                     var result = JsonSerializer.Deserialize<Response_Authenticate>(jsonResponse);
                     AccessToken = result.access_token;
                     RefreshToken = result.refresh_token;
-                    KeyTime = DateTime.Now.AddHours(1);
+                    KeyTime = DateTime.Now.AddMinutes(1);
                 }
                 return true;
             }
@@ -78,7 +78,7 @@ namespace DeviantartDownloader.Service {
                 isGettingKey=false;
             }
         }
-        public async Task<ICollection<GalleryFolder>> GetFolders(string userName, CancellationTokenSource cts, IDialogCoordinator dialogCoordinator, ViewModel view) {
+        public async Task<ICollection<GalleryFolder>> GetFolders(string userName, CancellationTokenSource cts, IDialogCoordinator dialogCoordinator, ViewModel view,AppSetting appSetting) {
 
             try {
                 if(!await GetAccessToken())
@@ -102,7 +102,7 @@ namespace DeviantartDownloader.Service {
                     offSet = result.next_offset;
                     contents.AddRange(result.results ?? []);
                     if(hasMore && RefreshToken!=null) {
-                        await Task.Delay(2000);
+                        await Task.Delay(appSetting.UserKeySearchFolderWaitTime * 1000);
                     }
                 }
 
@@ -129,7 +129,7 @@ namespace DeviantartDownloader.Service {
                 return [];
             }
         }
-        public async Task<ICollection<Deviant>> GetDeviants(string userName, string folderId, CancellationTokenSource cts, IDialogCoordinator dialogCoordinator, ViewModel view) {
+        public async Task<ICollection<Deviant>> GetDeviants(string userName, string folderId, CancellationTokenSource cts, IDialogCoordinator dialogCoordinator, ViewModel view,AppSetting appSetting) {
 
             try {
                 if(!await GetAccessToken())
@@ -153,7 +153,7 @@ namespace DeviantartDownloader.Service {
                     offSet = result.next_offset;
                     contents.AddRange(result.results ?? []);
                     if(hasMore && RefreshToken != null) {
-                        await Task.Delay(1000);
+                        await Task.Delay(appSetting.UserKeySearchDeviantWaitTime*1000);
                     }
                 }
 
@@ -201,7 +201,7 @@ namespace DeviantartDownloader.Service {
                 return [];
             }
         }
-        public async Task DownloadDeviant(DownloadableDeviant content, CancellationTokenSource cts, string destinationPath, string HeaderString = "", int literatureCount = 2) {
+        public async Task DownloadDeviant(DownloadableDeviant content, CancellationTokenSource cts, string destinationPath,AppSetting appSetting, int literatureCount = 2) {
             try {
                 await GetAccessToken();
                 content.Percent = 0;
@@ -220,40 +220,56 @@ namespace DeviantartDownloader.Service {
 
                 switch(content.Deviant.Type) {
                     case DeviantType.Art:
-                        if(content.Deviant.Downloadable) {
-                            string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
-                            using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
-                            if(getDownloadresponse.StatusCode == HttpStatusCode.TooManyRequests) {
+                        if(!appSetting.DownloadArtDescriptionOnly) {
+                            if(content.Deviant.Downloadable) {
+                                string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
+                                using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
+                                if(getDownloadresponse.StatusCode == HttpStatusCode.TooManyRequests) {
+                                    throw new RateLimitException();
+                                }
+                                var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
+                                var downloadContent = JsonSerializer.Deserialize<Response_GetDownloadContent>(jsonResponse);
+
+                                if(downloadContent.error != null) {
+                                    throw new Exception(downloadContent.error_description);
+                                }
+                                FileType imgType = GetFileType(content.Deviant.Type, downloadContent.filename);
+                                await Task.Delay(appSetting.UserKeyDownloadDeviantWaitTime * 1000);
+                                using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                    await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
+                                }
+
+                                content.Status = DownloadStatus.Completed;
+                                content.Percent = 100;
+                            }
+                            else {
+                                FileType imgType = GetFileType(content.Deviant.Type, content.Deviant.Content.Src);
+                                if(imgType == FileType.unknown) {
+                                    throw new Exception("Unknow File Type");
+                                }
+
+                                using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                    await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
+                                }
+                            }
+                        }
+                        if(appSetting.DownloadArtDescription) {
+                            content.Status = DownloadStatus.Get_Description;
+                            string metaDataRequest = $"https://www.deviantart.com/api/v1/oauth2/deviation/metadata?deviationids={content.Deviant.Id}&access_token={AccessToken}";
+                            using HttpResponseMessage getMetaDataresponse = await _httpClient.GetAsync(metaDataRequest, HttpCompletionOption.ResponseContentRead, cts.Token);
+                            if(getMetaDataresponse.StatusCode == HttpStatusCode.TooManyRequests) {
                                 throw new RateLimitException();
                             }
-                            var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
-                            var downloadContent = JsonSerializer.Deserialize<Response_GetDownloadContent>(jsonResponse);
-
-                            if(downloadContent.error != null) {
-                                throw new Exception(downloadContent.error_description);
-                            }
-                            FileType imgType = GetFileType(content.Deviant.Type, downloadContent.filename);
-                            await Task.Delay(1500);
-                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                                await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
+                            if(getMetaDataresponse.StatusCode == HttpStatusCode.OK) {
+                                var metaDataJSONResponse = await getMetaDataresponse.Content.ReadAsStringAsync();
+                                var metadata = JsonSerializer.Deserialize<Response_SearchMetaData>(metaDataJSONResponse);
+                                string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.html");
+                                await File.WriteAllTextAsync(filePath, CreateDescriptionHTMLFile(content.Deviant.Title, metadata.metadata.ToList()[0].description), cts.Token);
                             }
                             
-                            content.Status = DownloadStatus.Completed;
-                            content.Percent = 100;
                         }
-                        else {
-                            FileType imgType = GetFileType(content.Deviant.Type, content.Deviant.Content.Src);
-                            if(imgType == FileType.unknown) {
-                                throw new Exception("Unknow File Type");
-                            }
-
-                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                                await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
-                            }
-                            
-                            content.Status = DownloadStatus.Completed;
-                            content.Percent = 100;
-                        }
+                        content.Percent = 100;
+                        content.Status = DownloadStatus.Completed;
                         break;
 
                     case DeviantType.Video:
@@ -280,8 +296,8 @@ namespace DeviantartDownloader.Service {
                         using(var httpClient = new HttpClient(handler)) {
                             var request = new HttpRequestMessage(HttpMethod.Get, content.Deviant.Url);
                             request.Headers.UserAgent.ParseAdd(_userAgent[literatureCount % 10]);
-                            if(HeaderString != "") {
-                                request.Headers.Add("Cookie", HeaderString);
+                            if(appSetting.HeaderString != "") {
+                                request.Headers.Add("Cookie", appSetting.HeaderString);
                             }
                             progress.Report(0.25f);
 
@@ -457,6 +473,58 @@ namespace DeviantartDownloader.Service {
                        <hr/>
                        <div class='content'>
                             {node.OuterHtml} 
+                       </div> 
+                    </body>
+                    </html>";
+        }
+        private string CreateDescriptionHTMLFile(string title, string description) {
+            return $@"
+                    <html>
+                    <head>
+                        <title>{title}</title>
+                          <style>
+                              *::selection{{
+                                 background-color: #00c787;
+                              }}
+
+                              body {{
+                                 background-color: #d2decc;
+                                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                              }}
+
+                              .title {{
+                                 text-align: center;
+                                 letter-spacing: 0.2em;
+                                 font-size: 2.5em;
+                              }}
+
+                              .content {{
+                                 padding: 10px 25px;
+                                 font-size: 1.5em;
+                              }}
+
+                              .quoTVs {{
+                                 border: 1px solid #a8b2a7;
+                                 justify-self: center;
+                                 padding:50px 30px;
+                                 display: flex;
+                                 justify-content: center;
+                                 background-color: #dde6d9;
+								 font-weight:450;
+								 
+                                 a {{
+                                    font-size: 1em;
+                                    color: rgb(0, 0, 0);
+                                    text-decoration: none;
+                                 }}
+                              }}
+						 </style>
+                    </head>
+                    <body>
+                       <h1 class='title'>{title}</h1>
+                       <hr/>
+                       <div class='content'>
+                            {description}
                        </div> 
                     </body>
                     </html>";

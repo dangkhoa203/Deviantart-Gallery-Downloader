@@ -1,0 +1,29 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace DeviantartDownloader.Models {
+    public class AppSetting {
+        public string HeaderString {
+            get; set;
+        } = "";
+        public int QueueLimit {
+            get; set;
+        } = 3;
+        public int UserKeySearchFolderWaitTime {
+            get; set;
+        } = 1;
+        public int UserKeySearchDeviantWaitTime {
+            get; set;
+        } = 1;
+        public int UserKeyDownloadDeviantWaitTime {
+            get; set;
+        } = 2;
+        public bool DownloadArtDescription {
+            get; set;
+        }=false;
+        public bool DownloadArtDescriptionOnly {
+            get; set;
+        } = false;
+    }
+}
