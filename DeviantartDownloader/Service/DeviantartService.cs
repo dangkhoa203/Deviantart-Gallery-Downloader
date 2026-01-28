@@ -44,7 +44,7 @@ namespace DeviantartDownloader.Service {
                 var result = JsonSerializer.Deserialize<Response_Authenticate>(jsonResponse);
                 AccessToken = result.access_token;
                 RefreshToken = result.refresh_token;
-                KeyTime = DateTime.Now.AddHours(45);
+                KeyTime = DateTime.Now.AddMinutes(50);
                 return true;
             }
             catch {
@@ -66,7 +66,7 @@ namespace DeviantartDownloader.Service {
                     var result = JsonSerializer.Deserialize<Response_Authenticate>(jsonResponse);
                     AccessToken = result.access_token;
                     RefreshToken = result.refresh_token;
-                    KeyTime = DateTime.Now.AddMinutes(1);
+                    KeyTime = DateTime.Now.AddMinutes(50);
                 }
                 return true;
             }
@@ -264,7 +264,7 @@ namespace DeviantartDownloader.Service {
                                 var metaDataJSONResponse = await getMetaDataresponse.Content.ReadAsStringAsync();
                                 var metadata = JsonSerializer.Deserialize<Response_SearchMetaData>(metaDataJSONResponse);
                                 string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.html");
-                                await File.WriteAllTextAsync(filePath, CreateDescriptionHTMLFile(content.Deviant.Title, metadata.metadata.ToList()[0].description), cts.Token);
+                                await File.WriteAllTextAsync(filePath, CreateDescriptionHTMLFile(content.Deviant.Title, metadata.metadata.ToList()[0].description,content.Deviant.Content.Src, content.Deviant.Url,appSetting), cts.Token);
                             }
                             
                         }
@@ -318,7 +318,7 @@ namespace DeviantartDownloader.Service {
                                 string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.html");
                                 HtmlNode textContent = literatureText[1].InnerText.Contains("Badge Awards") ? literatureText[2] : literatureText[1];
                                 textContent.RemoveChild(textContent.ChildNodes[0], false);
-                                await File.WriteAllTextAsync(filePath, CreateHTMLFile(content.Deviant.Title, textContent), cts.Token);
+                                await File.WriteAllTextAsync(filePath, CreateHTMLFile(content.Deviant.Title, textContent, appSetting), cts.Token);
                                 progress.Report(1);
 
                                 content.Status = DownloadStatus.Completed;
@@ -414,7 +414,7 @@ namespace DeviantartDownloader.Service {
             }
             return FileType.mp4;
         }
-        private string CreateHTMLFile(string title, HtmlNode node) {
+        private string CreateHTMLFile(string title, HtmlNode node,AppSetting appSetting) {
             var figureCheck = node.SelectNodes(".//figure")?.ToList();
             if(figureCheck != null) {
                 foreach(var f in figureCheck) {
@@ -466,6 +466,8 @@ namespace DeviantartDownloader.Service {
                                     text-decoration: none;
                                  }}
                               }}
+
+                             {(appSetting.UseCustomStyle ? appSetting.CustomStyle : "")}
 						 </style>
                     </head>
                     <body>
@@ -477,7 +479,7 @@ namespace DeviantartDownloader.Service {
                     </body>
                     </html>";
         }
-        private string CreateDescriptionHTMLFile(string title, string description) {
+        private string CreateDescriptionHTMLFile(string title, string description,string src,string url,AppSetting appSetting) {
             return $@"
                     <html>
                     <head>
@@ -498,33 +500,33 @@ namespace DeviantartDownloader.Service {
                                  font-size: 2.5em;
                               }}
 
-                              .content {{
+                              .description-content {{
                                  padding: 10px 25px;
                                  font-size: 1.5em;
+                                 display:flex;
+                                 flex-direction:column;
                               }}
 
-                              .quoTVs {{
-                                 border: 1px solid #a8b2a7;
-                                 justify-self: center;
-                                 padding:50px 30px;
-                                 display: flex;
-                                 justify-content: center;
-                                 background-color: #dde6d9;
-								 font-weight:450;
-								 
-                                 a {{
-                                    font-size: 1em;
-                                    color: rgb(0, 0, 0);
-                                    text-decoration: none;
-                                 }}
+                              .description-image{{
+                                display:flex;
+                                justify-content:center;
+                                padding-bottom: 50px;
+                                border-bottom:2px solid #2b3635;
                               }}
+
+                              {(appSetting.UseCustomStyle ? appSetting.CustomStyle : "")}
 						 </style>
                     </head>
                     <body>
                        <h1 class='title'>{title}</h1>
                        <hr/>
-                       <div class='content'>
-                            {description}
+                       <div class='description-content'>
+                            <a href='{url}' target='_blank' class='description-image'>
+                                <img src='{src}' alt='{title}'/>
+                            </a>
+                            <div class='description-text'> 
+                                {description}
+                            </div>
                        </div> 
                     </body>
                     </html>";

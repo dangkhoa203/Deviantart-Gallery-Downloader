@@ -83,8 +83,34 @@ namespace DeviantartDownloader.ViewModels {
                 _descriptionOnly = value;
             }
         }
-      
+
+        private bool _useCustomStyle;
+        public bool UseCustomStyle {
+            get {
+                return _useCustomStyle;
+            }
+            set {
+                _useCustomStyle = value;
+                OnPropertyChanged(nameof(UseCustomStyle));
+            }
+        }
+
+        private string _customStyle;
+        public string CustomStyle {
+            get {
+                return _customStyle;
+            }
+            set {
+                _customStyle = value;
+            }
+        }
         public RelayCommand SaveCommand {
+            get; set;
+        }
+        public RelayCommand HeaderStringInfoCommand {
+            get; set;
+        }
+        public RelayCommand DownloadCountInfoCommand {
             get; set;
         }
         public RelayCommand UserKeyInfoCommand {
@@ -102,6 +128,8 @@ namespace DeviantartDownloader.ViewModels {
             _folderSearchWaitTime=appSetting.UserKeySearchFolderWaitTime.ToString();
             _downloadDescription=appSetting.DownloadArtDescription;
             _descriptionOnly = appSetting.DownloadArtDescriptionOnly;
+            _useCustomStyle=appSetting.UseCustomStyle;
+            _customStyle=appSetting.CustomStyle;
             SaveCommand = new RelayCommand(async o => {
                 var Result = await _dialogCoordinator.ShowMessageAsync(this, "ALERT", "Are you sure you want to save?", MessageDialogStyle.AffirmativeAndNegative);
                 if(Result == MessageDialogResult.Affirmative) {
@@ -109,6 +137,12 @@ namespace DeviantartDownloader.ViewModels {
                     Dialog.Close();
                 }
             }, o => QueueLimit != "" && _deviantSearchWaitTime != "" && _deviantDownloadWaitTime != "" && _folderSearchWaitTime != "");
+            HeaderStringInfoCommand = new RelayCommand(async o => {
+                var Result = await _dialogCoordinator.ShowMessageAsync(this, "INFORMATION", "Taking the cookie in header string to download restricted literature.");
+            }, o => true);
+            DownloadCountInfoCommand = new RelayCommand(async o => {
+                var Result = await _dialogCoordinator.ShowMessageAsync(this, "INFORMATION", "Changing the number of download at the same time.");
+            }, o => true);
             UserKeyInfoCommand = new RelayCommand(async o => {
                 var Result = await _dialogCoordinator.ShowMessageAsync(this, "INFORMATION", "Setting wait time for each request when using user key.\n*Note: search request will be send multiple time based on gallery size");
             }, o => true);

@@ -25,5 +25,11 @@ namespace DeviantartDownloader.Models {
         public bool DownloadArtDescriptionOnly {
             get; set;
         } = false;
+        public bool UseCustomStyle {
+            get; set;
+        } = false;
+        public string CustomStyle {
+            get; set;
+        } = "";
     }
 }
