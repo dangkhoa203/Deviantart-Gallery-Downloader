@@ -124,7 +124,7 @@
                                  Width="40" Height="30" FontWeight="Bold"
                                  FontSize="16" TextAlignment="Center"
                                  HorizontalAlignment="Left" VerticalAlignment="Top" 
-                                 PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" />
+                                 PreviewTextInput="TextBox_PreviewTextInput1" PreviewKeyDown="TextBox_PreviewKeyDown" />
                         <TextBlock Grid.Column="2" 
                                    VerticalAlignment="Center" Margin="0,0,0,0"
                                    Text="Second"/>
@@ -147,7 +147,7 @@
                                  Width="40" Height="30" FontWeight="Bold"
                                  FontSize="16" TextAlignment="Center"
                                  HorizontalAlignment="Left" VerticalAlignment="Top" 
-                                 PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" />
+                                 PreviewTextInput="TextBox_PreviewTextInput1" PreviewKeyDown="TextBox_PreviewKeyDown" />
                         <TextBlock Grid.Column="2" 
                                    VerticalAlignment="Center" Margin="0,0,0,0"
                                    Text="Second"/>
@@ -170,7 +170,7 @@
                                  Width="40" Height="30" FontWeight="Bold"
                                  FontSize="16" TextAlignment="Center"
                                  HorizontalAlignment="Left" VerticalAlignment="Top" 
-                                 PreviewTextInput="TextBox_PreviewTextInput" PreviewKeyDown="TextBox_PreviewKeyDown" />
+                                 PreviewTextInput="TextBox_PreviewTextInput1" PreviewKeyDown="TextBox_PreviewKeyDown" />
                         <TextBlock Grid.Column="2" 
                                    VerticalAlignment="Center" Margin="0,0,0,0"
                                    Text="Second"/>
