@@ -220,53 +220,36 @@ namespace DeviantartDownloader.Service {
 
                 switch(content.Deviant.Type) {
                     case DeviantType.Art:
-                        if(!appSetting.DownloadArtDescriptionOnly) {
-                            if(content.Deviant.Downloadable) {
-                                string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
-                                using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
-                                if(getDownloadresponse.StatusCode == HttpStatusCode.TooManyRequests) {
-                                    throw new RateLimitException();
-                                }
-                                var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
-                                var downloadContent = JsonSerializer.Deserialize<Response_GetDownloadContent>(jsonResponse);
-
-                                if(downloadContent.error != null) {
-                                    throw new Exception(downloadContent.error_description);
-                                }
-                                FileType imgType = GetFileType(content.Deviant.Type, downloadContent.filename);
-                                await Task.Delay(appSetting.UserKeyDownloadDeviantWaitTime * 1000);
-                                using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                                    await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
-                                }
-
-                                content.Status = DownloadStatus.Completed;
-                                content.Percent = 100;
-                            }
-                            else {
-                                FileType imgType = GetFileType(content.Deviant.Type, content.Deviant.Content.Src);
-                                if(imgType == FileType.unknown) {
-                                    throw new Exception("Unknow File Type");
-                                }
-
-                                using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                                    await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
-                                }
-                            }
-                        }
-                        if(appSetting.DownloadArtDescription) {
-                            content.Status = DownloadStatus.Get_Description;
-                            string metaDataRequest = $"https://www.deviantart.com/api/v1/oauth2/deviation/metadata?deviationids={content.Deviant.Id}&access_token={AccessToken}";
-                            using HttpResponseMessage getMetaDataresponse = await _httpClient.GetAsync(metaDataRequest, HttpCompletionOption.ResponseContentRead, cts.Token);
-                            if(getMetaDataresponse.StatusCode == HttpStatusCode.TooManyRequests) {
+                        if(content.Deviant.Downloadable) {
+                            string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
+                            using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
+                            if(getDownloadresponse.StatusCode == HttpStatusCode.TooManyRequests) {
                                 throw new RateLimitException();
                             }
-                            if(getMetaDataresponse.StatusCode == HttpStatusCode.OK) {
-                                var metaDataJSONResponse = await getMetaDataresponse.Content.ReadAsStringAsync();
-                                var metadata = JsonSerializer.Deserialize<Response_SearchMetaData>(metaDataJSONResponse);
-                                string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.html");
-                                await File.WriteAllTextAsync(filePath, CreateDescriptionHTMLFile(content.Deviant.Title, metadata.metadata.ToList()[0].description,content.Deviant.Content.Src, content.Deviant.Url,appSetting), cts.Token);
+                            var jsonResponse = await getDownloadresponse.Content.ReadAsStringAsync();
+                            var downloadContent = JsonSerializer.Deserialize<Response_GetDownloadContent>(jsonResponse);
+
+                            if(downloadContent.error != null) {
+                                throw new Exception(downloadContent.error_description);
                             }
-                            
+                            FileType imgType = GetFileType(content.Deviant.Type, downloadContent.filename);
+                            await Task.Delay(appSetting.UserKeyDownloadDeviantWaitTime * 1000);
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
+                            }
+
+                            content.Status = DownloadStatus.Completed;
+                            content.Percent = 100;
+                        }
+                        else {
+                            FileType imgType = GetFileType(content.Deviant.Type, content.Deviant.Content.Src);
+                            if(imgType == FileType.unknown) {
+                                throw new Exception("Unknow File Type");
+                            }
+
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
+                            }
                         }
                         content.Percent = 100;
                         content.Status = DownloadStatus.Completed;
@@ -342,6 +325,59 @@ namespace DeviantartDownloader.Service {
             }
             finally {
                 content.DownloadSpeed = "";
+            }
+
+        }
+        public async Task GetDescriptions(List<DownloadableDeviant> deviants,CancellationTokenSource cts,string destinationPath, AppSetting appSetting,ProgressDialogController progressDialogController=null) {
+            try {
+                progressDialogController.Canceled += (sender, e) => {
+                    cts.Cancel();
+                };
+                progressDialogController.SetMessage("Starting...");
+                await Task.Delay(2000);
+
+                int count = (int)Math.Floor(deviants.Count() / (decimal)50) + 1;
+                int finishCount = 0;
+                List<Content_MetaDataAPI> metaDatas = [];
+                for(int i = 0; i < count; i++) {
+                    List<DownloadableDeviant> items = deviants.Skip(i * 50).Take(50).ToList();
+                    progressDialogController.SetMessage("Getting deviation description...");
+                    StringBuilder Query = new StringBuilder();
+                    foreach(DownloadableDeviant deviant in items) {
+                        Query.Append($"deviationids%5B%5D={deviant.Deviant.Id}&");
+                    }
+                    string metaDataRequest = $"https://www.deviantart.com/api/v1/oauth2/deviation/metadata?{Query.ToString()}access_token={AccessToken}";
+                    using HttpResponseMessage getMetaDataresponse = await _httpClient.GetAsync(metaDataRequest, HttpCompletionOption.ResponseContentRead, cts.Token);
+                    if(getMetaDataresponse.StatusCode == HttpStatusCode.TooManyRequests) {
+                        throw new RateLimitException();
+                    }
+                    if(getMetaDataresponse.StatusCode == HttpStatusCode.OK) {
+                        var metaDataJSONResponse = await getMetaDataresponse.Content.ReadAsStringAsync();
+                        var metadata = JsonSerializer.Deserialize<Response_SearchMetaData>(metaDataJSONResponse);
+                        metaDatas.AddRange(metadata.metadata);
+                    }
+                }
+                foreach(var data in metaDatas) {
+                    var deviant = deviants.FirstOrDefault(d => d.Deviant.Id == data.deviationid);
+                    progressDialogController.SetMessage("Saving deviation description...");
+                    if(deviant != null) {
+                        string filePath = Path.Combine(destinationPath, deviant.Deviant.Author.Username, $"[{deviant.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(deviant.Deviant.Title)} by {deviant.Deviant.Author.Username} - {deviant.Deviant.Url.Substring(deviant.Deviant.Url.Length - 9)} (description).html");
+                        await File.WriteAllTextAsync(filePath, CreateDescriptionHTMLFile(deviant.Deviant.Title, data.description, deviant.Deviant.Url, appSetting, deviant.Deviant.Content?.Src, deviant.Deviant.Type), cts.Token);
+                    }
+                    finishCount++;
+                    progressDialogController.SetProgress(Math.Round(((double)finishCount / metaDatas.Count) * 100, 1));
+                }
+            }
+            catch(OperationCanceledException ex) {
+                progressDialogController.SetMessage("Canceling...");
+                await Task.Delay(2000);
+            }catch(Exception ex) {
+                progressDialogController.SetMessage("Something went wrong...");
+                await Task.Delay(2000);
+            }
+            finally {
+                if(progressDialogController.IsOpen)
+                    await progressDialogController.CloseAsync();
             }
 
         }
@@ -479,7 +515,7 @@ namespace DeviantartDownloader.Service {
                     </body>
                     </html>";
         }
-        private string CreateDescriptionHTMLFile(string title, string description,string src,string url,AppSetting appSetting) {
+        private string CreateDescriptionHTMLFile(string title, string description,string url,AppSetting appSetting, string src="", DeviantType type=DeviantType.Literature) {
             return $@"
                     <html>
                     <head>
@@ -509,9 +545,13 @@ namespace DeviantartDownloader.Service {
 
                               .description-image{{
                                 display:flex;
+                                padding: 0px 5%;
                                 justify-content:center;
                                 padding-bottom: 50px;
                                 border-bottom:2px solid #2b3635;
+                                img{{
+                                    max-width:100%;
+                                }}
                               }}
 
                               {(appSetting.UseCustomStyle ? appSetting.CustomStyle : "")}
@@ -521,9 +561,13 @@ namespace DeviantartDownloader.Service {
                        <h1 class='title'>{title}</h1>
                        <hr/>
                        <div class='description-content'>
-                            <a href='{url}' target='_blank' class='description-image'>
-                                <img src='{src}' alt='{title}'/>
-                            </a>
+                            {(type==DeviantType.Art ? 
+                                $@"
+                                   <a href='{url}' target='_blank' class='description-image'>
+                                        <img src='{src}' alt='{title}'/>
+                                   </a>"
+                            :
+                            "")}
                             <div class='description-text'> 
                                 {description}
                             </div>

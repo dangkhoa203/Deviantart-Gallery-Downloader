@@ -16,7 +16,7 @@
                  Background="#d4dfd0" BorderBrush="Black"
                  Dialog:DialogParticipation.Register="{Binding}">
     <Grid RowDefinitions="*,60">
-        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <Grid RowDefinitions="325,100,160,80,350">
                 <Grid Grid.Row="0">
                     <StackPanel Margin="20,0,20,0"  >
@@ -183,7 +183,7 @@
                                 Orientation="Horizontal">
                         <TextBlock Margin="0,0,0,10" 
                                    FontSize="30" FontWeight="Bold"
-                                   Text="Image Description"/>
+                                   Text="Deviation Description"/>
                         <Button Command="{Binding DescriptionInfoCommand}"
                                 Style="{DynamicResource MahApps.Styles.Button.Circle}"
                                 Background="#337287" BorderBrush="#2b3635" Cursor="Hand" 
@@ -198,7 +198,7 @@
                         <StackPanel Grid.Column="0" 
                                     Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding DownloadDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                      Content="Download image description" 
+                                      Content="Download description" 
                                       FlowDirection="LeftToRight"
                                       Margin="5,0,0,0" />
                         </StackPanel>
@@ -206,7 +206,7 @@
                                     Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding DescriptionOnly, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       IsEnabled="{Binding DownloadDescription}"
-                                      Content="Only download image description"
+                                      Content="Only download description"
                                       FlowDirection="LeftToRight"
                                       Margin="5,0,0,0" />
                         </StackPanel>

@@ -19,10 +19,10 @@ namespace DeviantartDownloader.Models {
         public int UserKeyDownloadDeviantWaitTime {
             get; set;
         } = 2;
-        public bool DownloadArtDescription {
+        public bool DownloadDescription {
             get; set;
         }=false;
-        public bool DownloadArtDescriptionOnly {
+        public bool DownloadDescriptionOnly {
             get; set;
         } = false;
         public bool UseCustomStyle {

@@ -285,7 +285,7 @@ namespace DeviantartDownloader.ViewModels {
             var filePath = Path.Combine(DestinationPath, "DeviantartDownloadList.json");
             string jsonString = JsonSerializer.Serialize(DownloadList, options);
             await File.WriteAllTextAsync(filePath, jsonString);
-            await _dialogCoordinator.ShowMessageAsync(this, "ALERT", $"File has been exported to {DestinationPath}!");
+            await _dialogCoordinator.ShowMessageAsync(this, "ALERT", $"File has been exported to {DestinationPath} .");
         }
 
         private void ShowSearchGalleryDialog() {
@@ -313,8 +313,8 @@ namespace DeviantartDownloader.ViewModels {
                 AppSetting.UserKeySearchDeviantWaitTime = int.Parse(viewModel.DeviantSearchWaitTime);
                 AppSetting.UserKeyDownloadDeviantWaitTime = int.Parse(viewModel.DeviantDownloadWaitTime);
                 AppSetting.UserKeySearchFolderWaitTime = int.Parse(viewModel.FolderSearchWaitTime);
-                AppSetting.DownloadArtDescription = viewModel.DownloadDescription;
-                AppSetting.DownloadArtDescriptionOnly = viewModel.DescriptionOnly;
+                AppSetting.DownloadDescription = viewModel.DownloadDescription;
+                AppSetting.DownloadDescriptionOnly = viewModel.DescriptionOnly;
                 AppSetting.CustomStyle = viewModel.CustomStyle;
                 AppSetting.UseCustomStyle= viewModel.UseCustomStyle;
             }
@@ -338,48 +338,70 @@ namespace DeviantartDownloader.ViewModels {
                     await _dialogCoordinator.ShowMessageAsync(this, "ERROR", "Path not found!");
                     return;
                 }
-                DownloadLabel = "Cancel";
-                IsDownloading = true;
-                var downloadQueue = new ConcurrentQueue<DownloadableDeviant>(DownloadList);
-                var throttler = new SemaphoreSlim(AppSetting.QueueLimit);
-                var tasks = new List<Task>();
-                int literatureCount = 0;
-                try {
-                    var downloadList = downloadViewItems.Cast<DownloadableDeviant>();
-                    if(_downloadTypeMode != null) {
-                        downloadList=downloadList.Where(o=>o.Deviant.Type==_downloadTypeMode);
-                    }
-                    if(_downloadStatusMode != null) {
-                        downloadList=downloadList.Where(o => o.Status == _downloadStatusMode);
-                    }
-                    downloadList = downloadList.ToList();
-                    foreach(var deviant in downloadList) {
-                        if(deviant.Status != DownloadStatus.Completed) {
-                            await throttler.WaitAsync(cts.Token);
-                            tasks.Add(Task.Run(async () => {
-                                try {
-                                    if(deviant.Deviant.Type == DeviantType.Literature) {
-                                        literatureCount += 1;
-                                    }
-                                    await _deviantartService.DownloadDeviant(deviant, cts, DestinationPath, AppSetting, literatureCount);
-                                }
-                                catch(Exception ex) {
+                var downloadList = downloadViewItems.Cast<DownloadableDeviant>();
+                if(_downloadTypeMode != null) {
+                    downloadList = downloadList.Where(o => o.Deviant.Type == _downloadTypeMode);
+                }
+                if(_downloadStatusMode != null) {
+                    downloadList = downloadList.Where(o => o.Status == _downloadStatusMode);
+                }
+                if(AppSetting.DownloadDescription) {
+                    var cancelDescription = new CancellationTokenSource();
 
-                                }
-                                finally {
-                                    throttler.Release();
-                                }
-                            }, cts.Token));
+                    var settings = new MetroDialogSettings() {
+                        NegativeButtonText = "Cancel",
+                    };
+                    var controller=await _dialogCoordinator.ShowProgressAsync(this, "Downloading description", "",true,settings);
+                    controller.Minimum = 0;
+                    controller.Maximum = 100;
+                    controller.SetProgress(0);
+                    
+                    await _deviantartService.GetDescriptions(downloadList.ToList(),
+                                                            cancelDescription,
+                                                            DestinationPath,
+                                                            AppSetting,
+                                                            controller);
+                }
+                if(!AppSetting.DownloadDescriptionOnly) {
+                    DownloadLabel = "Cancel";
+                    IsDownloading = true;
+                    var downloadQueue = new ConcurrentQueue<DownloadableDeviant>(DownloadList);
+                    var throttler = new SemaphoreSlim(AppSetting.QueueLimit);
+                    var tasks = new List<Task>();
+                    int literatureCount = 0;
+                    try {
+                        downloadList = downloadList.ToList();
+                        foreach(var deviant in downloadList) {
+                            if(deviant.Status != DownloadStatus.Completed) {
+                                await throttler.WaitAsync(cts.Token);
+                                tasks.Add(Task.Run(async () => {
+                                    try {
+                                        if(deviant.Deviant.Type == DeviantType.Literature) {
+                                            literatureCount += 1;
+                                        }
+                                        await _deviantartService.DownloadDeviant(deviant, cts, DestinationPath, AppSetting, literatureCount);
+                                    }
+                                    catch(Exception ex) {
+
+                                    }
+                                    finally {
+                                        throttler.Release();
+                                    }
+                                }, cts.Token));
+                            }
+                        }
+                        await Task.WhenAll(tasks);
+                        IsDownloading = false;
+                        DownloadLabel = "Download";
+                        if(!cts.IsCancellationRequested) {
+                            await _dialogCoordinator.ShowMessageAsync(this, "ALERT", "Download completed!");
                         }
                     }
-                    await Task.WhenAll(tasks);
-                    IsDownloading = false;
-                    DownloadLabel = "Download";
-                    if(!cts.IsCancellationRequested) {
-                        await _dialogCoordinator.ShowMessageAsync(this, "ALERT", "Download completed!");
+                    catch {
                     }
                 }
-                catch {
+                else {
+                    await _dialogCoordinator.ShowMessageAsync(this, "ALERT", "Download description completed!");
                 }
             }
             else {
