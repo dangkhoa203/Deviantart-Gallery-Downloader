@@ -12,6 +12,6 @@ namespace DeviantartDownloader.Models.Enum
         Fail=3,
         Canceled = 4,
         Rate_Limited=5,
-        Get_Description=6
+        Tier_Locked=6
     }
 }

@@ -339,7 +339,7 @@ namespace DeviantartDownloader.ViewModels {
                     await _dialogCoordinator.ShowMessageAsync(this, "ERROR", "Path not found!");
                     return;
                 }
-                var downloadList = downloadViewItems.Cast<DownloadableDeviant>();
+                var downloadList = downloadViewItems.Cast<DownloadableDeviant>().Where(o=>o.Status!=DownloadStatus.Tier_Locked);
                 if(_downloadTypeMode != null) {
                     downloadList = downloadList.Where(o => o.Deviant.Type == _downloadTypeMode);
                 }

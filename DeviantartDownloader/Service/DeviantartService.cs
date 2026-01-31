@@ -181,7 +181,8 @@ namespace DeviantartDownloader.Service {
                                                                      : null,
                                     Downloadable = o.is_downloadable ?? false,
                                     Type = TypeValidation(o),
-                                    PublishDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(o.published_time)).Date
+                                    PublishDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(o.published_time)).Date,
+                                    ContentLocked = !(o.tier_access == null || o.tier_access == "unlocked")
                                 })
                                 .OrderBy(o => o.PublishDate)
                                 .ToList();
