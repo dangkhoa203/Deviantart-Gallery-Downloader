@@ -134,6 +134,9 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand SelectAllFailCommand {
             get; set;
         }
+        public RelayCommand SelectAllTierLockedCommand {
+            get; set;
+        }
         public RelayCommand ToDeviantartCommand {
             get; set;
         }
@@ -208,7 +211,11 @@ namespace DeviantartDownloader.ViewModels {
                 SelectDeviantStatus(DownloadStatus.Fail);
             }, o => !IsDownloading && !_isImporting && DownloadList.Count > 0);
 
-            ToDeviantartCommand= new RelayCommand(o => {
+            SelectAllTierLockedCommand = new RelayCommand(o => {
+                SelectDeviantStatus(DownloadStatus.Tier_Locked);
+            }, o => !IsDownloading && !_isImporting && DownloadList.Count > 0);
+
+            ToDeviantartCommand = new RelayCommand(o => {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://www.deviantart.com/") { UseShellExecute = true });
             }, o => true);
 
