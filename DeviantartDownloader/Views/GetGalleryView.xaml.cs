@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -29,6 +30,11 @@ namespace DeviantartDownloader.Views
 
         private void MetroWindow_Loaded(object sender, RoutedEventArgs e) {
             textUsername.Focus();
+        }
+
+        private void TextBox_PreviewTextInput(object sender, TextCompositionEventArgs e) {
+            Regex regex = new Regex("[^0-9]");
+            e.Handled = regex.IsMatch(e.Text);
         }
     }
 }

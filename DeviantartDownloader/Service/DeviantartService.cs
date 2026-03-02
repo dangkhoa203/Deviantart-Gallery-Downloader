@@ -2,6 +2,7 @@
 using DeviantartDownloader.DTOs;
 using DeviantartDownloader.Exceptions;
 using DeviantartDownloader.Extension;
+using DeviantartDownloader.Function;
 using DeviantartDownloader.Models;
 using DeviantartDownloader.Models.Enum;
 using DeviantartDownloader.ViewModels;
@@ -129,13 +130,14 @@ namespace DeviantartDownloader.Service {
                 return [];
             }
         }
-        public async Task<ICollection<Deviant>> GetDeviants(string userName, string folderId, CancellationTokenSource cts, IDialogCoordinator dialogCoordinator, ViewModel view,AppSetting appSetting) {
+        public async Task<ICollection<Deviant>> GetDeviants(string userName, string folderId,bool isLimit,int count, CancellationTokenSource cts, IDialogCoordinator dialogCoordinator, ViewModel view,AppSetting appSetting) {
 
             try {
                 if(!await GetAccessToken())
                     throw new Exception("Fail authenticate");
 
                 int? offSet = 0;
+                int limitCount = 0;
                 bool hasMore = true;
                 List<Content_DeviantAPI> contents = [];
 
@@ -148,10 +150,26 @@ namespace DeviantartDownloader.Service {
 
                         throw new Exception(result.error_description);
                     }
+                    if(result.results == null)
+                        break;
 
                     hasMore = result.has_more ?? false;
                     offSet = result.next_offset;
-                    contents.AddRange(result.results ?? []);
+
+
+                    if(isLimit) {
+                        if(limitCount + result.results.Count > count) {
+                            contents.AddRange(result.results.Take(count - limitCount));
+                        }
+                        else {
+                            limitCount += result.results.Count;
+                            contents.AddRange(result.results);
+                        }
+                    }
+                    else {
+                        contents.AddRange(result.results);
+                    }
+                   
                     if(hasMore && RefreshToken != null) {
                         await Task.Delay(appSetting.UserKeySearchDeviantWaitTime*1000);
                     }
@@ -182,9 +200,11 @@ namespace DeviantartDownloader.Service {
                                     Downloadable = o.is_downloadable ?? false,
                                     Type = TypeValidation(o),
                                     PublishDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(o.published_time)).Date,
-                                    ContentLocked = !(o.tier_access == null || o.tier_access == "unlocked")
+                                    ContentLocked = !(o.tier_access == null || o.tier_access == "unlocked"),
+                                    Status = (o.tier_access == null || o.tier_access == "unlocked") ? DownloadStatus.Waiting : DownloadStatus.Tier_Locked,
+                                    FileSize = GetDeviantFileSize(o)
                                 })
-                                .OrderBy(o => o.PublishDate)
+                                .OrderByDescending(o => o.PublishDate)
                                 .ToList();
                 return deviants;
             }
@@ -202,7 +222,7 @@ namespace DeviantartDownloader.Service {
                 return [];
             }
         }
-        public async Task DownloadDeviant(DownloadableDeviant content, CancellationTokenSource cts, string destinationPath,AppSetting appSetting, int literatureCount = 2) {
+        public async Task DownloadDeviant(Deviant content, CancellationTokenSource cts, string destinationPath,AppSetting appSetting, int literatureCount = 2) {
             try {
                 await GetAccessToken();
                 content.Percent = 0;
@@ -215,14 +235,14 @@ namespace DeviantartDownloader.Service {
                 });
 
                 content.Status = DownloadStatus.Downloading;
-                if(!Directory.Exists(Path.Combine(destinationPath, content.Deviant.Author.Username))) {
-                    Directory.CreateDirectory(Path.Combine(destinationPath, content.Deviant.Author.Username));
+                if(!Directory.Exists(Path.Combine(destinationPath, content.Author.Username))) {
+                    Directory.CreateDirectory(Path.Combine(destinationPath, content.Author.Username));
                 }
 
-                switch(content.Deviant.Type) {
+                switch(content.Type) {
                     case DeviantType.Art:
-                        if(content.Deviant.Downloadable) {
-                            string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Deviant.Id}?access_token={AccessToken}";
+                        if(content.Downloadable) {
+                            string request = $"https://www.deviantart.com/api/v1/oauth2/deviation/download/{content.Id}?access_token={AccessToken}";
                             using HttpResponseMessage getDownloadresponse = await _httpClient.GetAsync(request, HttpCompletionOption.ResponseContentRead, cts.Token);
                             if(getDownloadresponse.StatusCode == HttpStatusCode.TooManyRequests) {
                                 throw new RateLimitException();
@@ -233,9 +253,9 @@ namespace DeviantartDownloader.Service {
                             if(downloadContent.error != null) {
                                 throw new Exception(downloadContent.error_description);
                             }
-                            FileType imgType = GetFileType(content.Deviant.Type, downloadContent.filename);
+                            FileType imgType = GetFileType(content.Type, downloadContent.filename);
                             await Task.Delay(appSetting.UserKeyDownloadDeviantWaitTime * 1000);
-                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Author.Username, $"{GetFormatFileName(content)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
                                 await _httpClient.DownloadAsync(downloadContent.src, file, Speed, Progress, cts.Token);
                             }
 
@@ -243,13 +263,13 @@ namespace DeviantartDownloader.Service {
                             content.Percent = 100;
                         }
                         else {
-                            FileType imgType = GetFileType(content.Deviant.Type, content.Deviant.Content.Src);
+                            FileType imgType = GetFileType(content.Type, content.Content.Src);
                             if(imgType == FileType.unknown) {
                                 throw new Exception("Unknow File Type");
                             }
 
-                            using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
-                                await _httpClient.DownloadAsync(content.Deviant.Content.Src, file, Speed, Progress, cts.Token);
+                            using(var file = new FileStream(Path.Combine(destinationPath, content.Author.Username, $"{GetFormatFileName(content)}.{imgType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                await _httpClient.DownloadAsync(content.Content.Src, file, Speed, Progress, cts.Token);
                             }
                         }
                         content.Percent = 100;
@@ -257,13 +277,13 @@ namespace DeviantartDownloader.Service {
                         break;
 
                     case DeviantType.Video:
-                        var video = content.Deviant.Video.OrderByDescending(o => o.FileSize).First();
-                        FileType videoType = GetFileType(content.Deviant.Type,video.Src);
+                        var video = content.Video.OrderByDescending(o => o.FileSize).First();
+                        FileType videoType = GetFileType(content.Type,video.Src);
                         if(videoType == FileType.unknown) {
                             throw new Exception("Unknow File Type");
                         }
 
-                        using(var file = new FileStream(Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
+                        using(var file = new FileStream(Path.Combine(destinationPath, content.Author.Username, $"{GetFormatFileName(content)}.{videoType.ToString()}"), FileMode.Create, FileAccess.Write, FileShare.None)) {
                             await _httpClient.DownloadAsync(video.Src, file, Speed, Progress, cts.Token);
                         }
 
@@ -278,7 +298,7 @@ namespace DeviantartDownloader.Service {
 
                         IProgress<float> progress = Progress;
                         using(var httpClient = new HttpClient(handler)) {
-                            var request = new HttpRequestMessage(HttpMethod.Get, content.Deviant.Url);
+                            var request = new HttpRequestMessage(HttpMethod.Get, content.Url);
                             request.Headers.UserAgent.ParseAdd(_userAgent[literatureCount % 10]);
                             if(appSetting.HeaderString != "") {
                                 request.Headers.Add("Cookie", appSetting.HeaderString);
@@ -299,10 +319,10 @@ namespace DeviantartDownloader.Service {
                                 var literatureText = htmlDoc.DocumentNode.SelectNodes("//section").ToList();
                                 progress.Report(0.75f);
 
-                                string filePath = Path.Combine(destinationPath, content.Deviant.Author.Username, $"[{content.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(content.Deviant.Title)} by {content.Deviant.Author.Username} - {content.Deviant.Url.Substring(content.Deviant.Url.Length - 9)}.html");
+                                string filePath = Path.Combine(destinationPath, content.Author.Username, $"{GetFormatFileName(content)}.html");
                                 HtmlNode textContent = literatureText[1].InnerText.Contains("Badge Awards") ? literatureText[2] : literatureText[1];
                                 textContent.RemoveChild(textContent.ChildNodes[0], false);
-                                await File.WriteAllTextAsync(filePath, CreateHTMLFile(content.Deviant.Title, textContent, appSetting), cts.Token);
+                                await File.WriteAllTextAsync(filePath, CreateHTMLFile(content.Title, textContent, appSetting), cts.Token);
                                 progress.Report(1);
 
                                 content.Status = DownloadStatus.Completed;
@@ -329,7 +349,18 @@ namespace DeviantartDownloader.Service {
             }
 
         }
-        public async Task GetDescriptions(List<DownloadableDeviant> deviants,CancellationTokenSource cts,string destinationPath, AppSetting appSetting,ProgressDialogController progressDialogController=null) {
+        public string GetDeviantFileSize(Content_DeviantAPI content) {
+            var Type = TypeValidation(content);
+            if(Type == DeviantType.Video) {
+                var Video = content.videos.OrderByDescending(o => o.filesize).First();
+                return GlobalFuction.FormatBytes(Video.filesize ?? 0);
+            } else if(Type==DeviantType.Art) {
+                return content.is_downloadable.Value ?
+                     GlobalFuction.FormatBytes(content.download_filesize ?? 0) : GlobalFuction.FormatBytes(content.content.filesize ?? 0);
+            }
+            return "";
+        }
+        public async Task GetDescriptions(List<Deviant> deviants,CancellationTokenSource cts,string destinationPath, AppSetting appSetting,ProgressDialogController progressDialogController=null) {
             try {
                 if(!await GetAccessToken())
                     throw new Exception("Fail authenticate");
@@ -344,11 +375,11 @@ namespace DeviantartDownloader.Service {
                 int finishCount = 0;
                 List<Content_MetaDataAPI> metaDatas = [];
                 for(int i = 0; i < count; i++) {
-                    List<DownloadableDeviant> items = deviants.Skip(i * 50).Take(50).ToList();
+                    List<Deviant> items = deviants.Skip(i * 50).Take(50).ToList();
                     progressDialogController.SetMessage("Getting deviation description...");
                     StringBuilder Query = new StringBuilder();
-                    foreach(DownloadableDeviant deviant in items) {
-                        Query.Append($"deviationids%5B%5D={deviant.Deviant.Id}&");
+                    foreach(Deviant deviant in items) {
+                        Query.Append($"deviationids%5B%5D={deviant.Id}&");
                     }
                     string metaDataRequest = $"https://www.deviantart.com/api/v1/oauth2/deviation/metadata?{Query.ToString()}access_token={AccessToken}";
                     using HttpResponseMessage getMetaDataresponse = await _httpClient.GetAsync(metaDataRequest, HttpCompletionOption.ResponseContentRead, cts.Token);
@@ -369,13 +400,13 @@ namespace DeviantartDownloader.Service {
                 }
                 progressDialogController.SetMessage("Saving deviation description...");
                 foreach(var data in metaDatas) {
-                    var deviant = deviants.FirstOrDefault(d => d.Deviant.Id == data.deviationid);
-                    if(!Directory.Exists(Path.Combine(destinationPath, deviant.Deviant.Author.Username))) {
-                        Directory.CreateDirectory(Path.Combine(destinationPath, deviant.Deviant.Author.Username));
+                    var deviant = deviants.FirstOrDefault(d => d.Id == data.deviationid);
+                    if(!Directory.Exists(Path.Combine(destinationPath, deviant.Author.Username))) {
+                        Directory.CreateDirectory(Path.Combine(destinationPath, deviant.Author.Username));
                     }
                     if(deviant != null) {
-                        string filePath = Path.Combine(destinationPath, deviant.Deviant.Author.Username, $"[{deviant.Deviant.PublishDate.Date.ToString("yyyy-MM-dd")}] {GetLegalFileName(deviant.Deviant.Title)} by {deviant.Deviant.Author.Username} - {deviant.Deviant.Url.Substring(deviant.Deviant.Url.Length - 9)} (description).html");
-                        await File.WriteAllTextAsync(filePath, CreateDescriptionHTMLFile(deviant.Deviant.Title, data.description, deviant.Deviant.Url, appSetting, deviant.Deviant.Content?.Src, deviant.Deviant.Type), cts.Token);
+                        string filePath = Path.Combine(destinationPath, deviant.Author.Username, $"{GetFormatFileName(deviant)} (description).html");
+                        await File.WriteAllTextAsync(filePath, CreateDescriptionHTMLFile(deviant.Title, data.description, deviant.Url, appSetting, deviant.Content?.Src, deviant.Type), cts.Token);
                     }
                     finishCount++;
                     progressDialogController.SetProgress(Math.Round(((double)finishCount / metaDatas.Count) * 100, 1));
@@ -414,6 +445,9 @@ namespace DeviantartDownloader.Service {
                 default:
                     return FileType.unknown;
             }
+        }
+        private string GetFormatFileName(Deviant deviant) {
+            return $"[{deviant.PublishDate.Date.ToString("yyyy - MM - dd")}] {GetLegalFileName(deviant.Title)} by {deviant.Author.Username} - {deviant.Url.Substring(deviant.Url.LastIndexOf("-")+1)}";
         }
         private FileType ReturnArtFileType(string url) {
             List<FileType> validFileType = [

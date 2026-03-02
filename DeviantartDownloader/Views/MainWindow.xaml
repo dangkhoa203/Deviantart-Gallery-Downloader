@@ -156,62 +156,41 @@
                   RowDefinitions="*,40">
                 <StackPanel Grid.Row="0" 
                             Margin="10,20,0,0">
+                    <ComboBox
+    mah:TextBoxHelper.Watermark="Empty"
+      mah:ControlsHelper.CornerRadius="4"
+      Foreground="#337287"
+    ItemsSource="{Binding SelectModes}"
+    SelectedItem="{Binding SelectedMode,Mode=TwoWay}"    
+    DisplayMemberPath="DisplayName"
+     Margin="0,0,0,20"
+     FontSize="16"
+    BorderBrush="#93a98f"
+    Cursor="Hand" FontWeight="SemiBold"
+    Background="#e9f0e6"
+    IsSynchronizedWithCurrentItem="True"
+    HorizontalContentAlignment="Center" 
+    VerticalContentAlignment="Center"
+    />
                     <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
                             mah:ControlsHelper.FocusBorderBrush="#93a98f"
                             mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
                             BorderBrush="#93a98f"
-                            Command="{Binding SelectAllArtCommand}"
+                            Command="{Binding SelectCommand}"
                             Foreground="#337287"
                             Cursor="Hand"
                             Margin="0,0,0,20" Height="30"
-                            Content="Select all art"/>
+                            Content="Select"/>
                     <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
                             mah:ControlsHelper.FocusBorderBrush="#93a98f"
                             mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                            Command="{Binding SelectAllLiteratureCommand}"
+                            Command="{Binding ShowMoreSelectCommand}"
                             BorderBrush="#93a98f"
                             Foreground="#337287"
                             Cursor="Hand"
                             Margin="0,0,0,20" 
                             Height="30"
-                            Content="Select all literature"/>
-                    <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
-                            mah:ControlsHelper.FocusBorderBrush="#93a98f"
-                            mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                            Command="{Binding SelectAllVideoCommand}"
-                            BorderBrush="#93a98f"
-                            Foreground="#337287"
-                            Cursor="Hand"
-                            Margin="0,0,0,20" 
-                            Height="30"
-                            Content="Select all video"/>
-                    <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
-                            mah:ControlsHelper.FocusBorderBrush="#93a98f"
-                            mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                            Command="{Binding SelectAllCompletedCommand}"
-                            BorderBrush="#93a98f"
-                            Foreground="#337287"
-                            Cursor="Hand"    
-                            Margin="0,0,0,20"
-                            Content="Select All Completed"/>
-                    <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
-                            mah:ControlsHelper.FocusBorderBrush="#93a98f"
-                            mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                            Command="{Binding SelectAllFailCommand}"
-                            BorderBrush="#93a98f"
-                            Foreground="#337287"
-                            Cursor="Hand"  
-                            Margin="0,0,0,20"
-                            Content="Select All Fail"/>
-                    <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
-                            mah:ControlsHelper.FocusBorderBrush="#93a98f"
-                            mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                            Command="{Binding SelectAllTierLockedCommand}"
-                            BorderBrush="#93a98f"
-                            Foreground="#337287"
-                            Cursor="Hand"  
-                            Margin="0,0,0,20"
-                            Content="Select All TIer Locked"/>
+                            Content="More"/>
                     <Button mah:ControlsHelper.ContentCharacterCasing="Upper"
                             mah:ControlsHelper.FocusBorderBrush="#93a98f"
                             mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
@@ -299,17 +278,21 @@
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
                             <DataGridTextColumn Header="Author" 
-                                Binding="{Binding Deviant.Author.Username}" 
+                                Binding="{Binding Author.Username}" 
                                 IsReadOnly="True"  Width="120" />
                             <DataGridTextColumn Header="Deviation Name" 
-                                Binding="{Binding Deviant.Title}"  
+                                Binding="{Binding Title}"  
                                 Width="*" IsReadOnly="True"/>
                             <DataGridTextColumn Header="Type" 
-                                Binding="{Binding Deviant.Type}"  
+                                Binding="{Binding Type}"  
                                 IsReadOnly="True" Width="60" />
                             <DataGridTextColumn Header="Date" 
-                                Binding="{Binding Deviant.PublishDate,StringFormat='dd/MM/yyyy'}"  
+                                Binding="{Binding PublishDate,StringFormat='d'}"  
                                 IsReadOnly="True" Width="80" />
+                            <DataGridTextColumn Header="Original FIle" 
+                                                Binding="{Binding HaveOriginalFile}"  
+                                                IsReadOnly="True"
+                                                Foreground="Black" Width="100" />
                             <DataGridTextColumn Header="Percent" 
                                 Binding="{Binding DisplayPercent}"  
                                 IsReadOnly="True" Width="70" />
@@ -319,14 +302,14 @@
                             <DataGridTextColumn Header="Speed" 
                                 Binding="{Binding DownloadSpeed}" 
                                 IsReadOnly="True" Width="80"  />
-                            <DataGridTemplateColumn Header="" Width="80">
+                            <DataGridTemplateColumn Header="" MinWidth="80">
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate>
                                         <Button Cursor="Hand" Foreground="#337287" Margin="5,0,5,0"  
                                 Command="{Binding Path=DataContext.RemoveDeviantFromListCommand,       
                                           RelativeSource= {RelativeSource FindAncestor,
                                           AncestorType={x:Type DataGrid}}}" 
-                                CommandParameter="{Binding Path= Deviant.Id}" 
+                                CommandParameter="{Binding Path= Id}" 
                                 Content="Remove"/>
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>

@@ -2,6 +2,7 @@
 using DeviantartDownloader.Models;
 using DeviantartDownloader.Models.Enum;
 using DeviantartDownloader.Service;
+using DeviantartDownloader.Service.Interface;
 using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,7 @@ using System.Windows.Media;
 namespace DeviantartDownloader.ViewModels {
     public class GetGalleryViewModel : DialogViewModel {
         private readonly DeviantartService _deviantartService;
+        private readonly IDialogService _dialogService;
         public CancellationTokenSource cts { get; set; } = new CancellationTokenSource();
 
         public ICollectionView deviantViewItems {
@@ -171,7 +173,29 @@ namespace DeviantartDownloader.ViewModels {
                 OnPropertyChanged(nameof(TileBrush));
             }
         }
+        private bool _isLimit = false;
+        public bool IsLimit {
+            get {
+                return _isLimit;
+            }
+            set {
+                _isLimit = value;
+                OnPropertyChanged(nameof(IsLimit));
+            }
+        }
+        public string LimitCount {
+            get;
+            set;
+        } = "10";
+        public List<SelectionMode> SelectModes {
+            get;set;
+        } = [
+            new("Art",DeviantType.Art),
+            new("Literature",DeviantType.Literature),
+            new("Video",DeviantType.Video)
+            ];
 
+        public SelectionMode SelectedMode { get; set; }
         public RelayCommand GetFolderCommand {
             get; set;
         }
@@ -190,20 +214,18 @@ namespace DeviantartDownloader.ViewModels {
         public RelayCommand SubmitToDownloadListCommand {
             get; set;
         }
-        public RelayCommand SelectAllArtCommand {
+        public RelayCommand SelectCommand {
             get; set;
         }
-        public RelayCommand SelectAllLiteratureCommand {
-            get; set;
+        public RelayCommand ShowMoreSelectCommand {
+            get;set;
         }
-        public RelayCommand SelectAllVideoCommand {
-            get; set;
-        }
-
-        public GetGalleryViewModel(DeviantartService service, IDialogCoordinator dialogCoordinator,AppSetting appSetting) {
+        public GetGalleryViewModel(DeviantartService service, IDialogCoordinator dialogCoordinator,AppSetting appSetting, IDialogService dialogService) {
             _appSetting= appSetting;
             _deviantartService = service;
             _dialogCoordinator= dialogCoordinator;
+            _dialogService= dialogService;
+            SelectedMode = SelectModes.First();
             deviantViewItems = CollectionViewSource.GetDefaultView(_deviants);
 
             RemoveDeviantFromListCommand = new RelayCommand(o => {
@@ -227,7 +249,7 @@ namespace DeviantartDownloader.ViewModels {
 
             GetDeviantCommand = new RelayCommand(async o => {
                 await GetDeviants();
-            }, o => SelectedUsername != "Not selected" && SelectedFolder != null && !LoadingSearchFolder);
+            }, o => SelectedUsername != "Not selected" && SelectedFolder != null && !LoadingSearchFolder && LimitCount !="");
 
             ResetUserCommand = new RelayCommand(o => {
                 ResetSearch();
@@ -238,16 +260,11 @@ namespace DeviantartDownloader.ViewModels {
                 Dialog.Close();
             }, o => Deviants.Count > 0 && !LoadingSearchDeviant);
 
-            SelectAllArtCommand = new RelayCommand(o => {
-                SelectDeviantType(DeviantType.Art);
+            SelectCommand = new RelayCommand(o => {
+                SelectDeviantType(SelectedMode.DeviantType ?? DeviantType.Art);
             }, o => Deviants.Count > 0 && !LoadingSearchDeviant);
-
-            SelectAllLiteratureCommand = new RelayCommand(o => {
-                SelectDeviantType(DeviantType.Literature);
-            }, o => Deviants.Count > 0 && !LoadingSearchDeviant);
-
-            SelectAllVideoCommand = new RelayCommand(o => {
-                SelectDeviantType(DeviantType.Video);
+            ShowMoreSelectCommand = new RelayCommand(o => {
+                ShowSelectMoreDialog();
             }, o => Deviants.Count > 0 && !LoadingSearchDeviant);
         }
         private void SelectDeviantType(DeviantType deviantType) {
@@ -262,6 +279,9 @@ namespace DeviantartDownloader.ViewModels {
                     }
                 }
             }
+        }
+        private void ShowSelectMoreDialog() {
+            var viewModel = _dialogService.ShowDialog<MoreSelectViewModel>(new MoreSelectViewModel( _dialogCoordinator,_deviants.ToList()));
         }
         private void ResetSearch() {
             TileBrush = Brushes.Red;
@@ -322,7 +342,7 @@ namespace DeviantartDownloader.ViewModels {
                 IsComboBoxEnabled = false;
                 LoadingSearchDeviant = true;
                 SearchDeviantLabel = "Cancel";
-                var deviants = await _deviantartService.GetDeviants(SearchUserName, SelectedFolder?.Id ?? "", cts,_dialogCoordinator,this,_appSetting);
+                var deviants = await _deviantartService.GetDeviants(SelectedUsername, SelectedFolder?.Id ?? "",IsLimit,int.Parse(LimitCount)>0 ? int.Parse(LimitCount) :1, cts,_dialogCoordinator,this,_appSetting);
                 deviants = deviants.ToList();
                 if(deviants.Count > 0) {
                     IsSearchable = false;

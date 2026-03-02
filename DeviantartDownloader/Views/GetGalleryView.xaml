@@ -15,7 +15,7 @@
     <mah:MetroWindow.Resources>
         <CollectionViewSource x:Key="deviantViewItems" Source="{Binding Deviants}"/>
     </mah:MetroWindow.Resources>
-    <Grid RowDefinitions="100,120,60,*,50">
+    <Grid RowDefinitions="100,150,60,*,50">
         <Grid VerticalAlignment="Top" 
               Grid.Row="0" 
               Margin="20,10,10,10"
@@ -83,7 +83,7 @@
                         <TextBlock Text="Reset" 
                                    Foreground="Red"
                                    Margin="0,0,8,0" 
-                                   VerticalAlignment="Center"/>       
+                                   VerticalAlignment="Center"/>
                         <iconPacks:PackIconFontAwesome Foreground="Red" 
                                                        Kind="CircleMinusSolid" 
                                                        VerticalAlignment="Center" />
@@ -96,8 +96,8 @@
                       ItemsSource="{Binding SearchResultFolders}"
                       SelectedItem="{Binding SelectedFolder,Mode=TwoWay}"                
                       IsEnabled="{Binding IsComboBoxEnabled}"
-                      DisplayMemberPath="DisplayName"
                       FontSize="16"
+                      DisplayMemberPath="DisplayName"
                       BorderBrush="#93a98f"
                       SelectedValuePath="Id"
                       Margin="20,0,20,0"
@@ -105,6 +105,22 @@
                       Background="#e9f0e6"
                       IsSynchronizedWithCurrentItem="True"
                       Name="cbFolder"/>
+            <StackPanel Margin="20,5,20,0" Orientation="Horizontal">
+                <Label Content="Limit:" VerticalAlignment="Center"/>
+                <CheckBox IsChecked="{Binding IsLimit,Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                <Label Margin="100,0,10,0" Content="Count:" VerticalAlignment="Center"/>
+                <TextBox mah:ControlsHelper.FocusBorderBrush="#93a98f"
+                         mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
+                         mah:ControlsHelper.CornerRadius="4" Background="#e9f0e6"
+                         IsEnabled="{Binding IsLimit}"
+                         Text="{Binding LimitCount,UpdateSourceTrigger=PropertyChanged}"
+                         Foreground="#337287" FontWeight="SemiBold"
+                         BorderBrush="#93a98f"
+                         
+                         Height="35" FontSize="18" Width="60" PreviewTextInput="TextBox_PreviewTextInput">
+                        
+                </TextBox>
+            </StackPanel>
         </StackPanel>
         <Grid Grid.Row="2">
             <Button mah:ControlsHelper.CornerRadius="2"
@@ -122,33 +138,40 @@
               ColumnDefinitions="150,*">
             <StackPanel Grid.Column="0" 
                         Margin="10,20,0,20">
+                <ComboBox
+                    mah:TextBoxHelper.Watermark="Empty"
+                      mah:ControlsHelper.CornerRadius="4"
+                      Foreground="#337287"
+                    ItemsSource="{Binding SelectModes}"
+                    SelectedItem="{Binding SelectedMode,Mode=TwoWay}"    
+                    DisplayMemberPath="DisplayName"
+                     Margin="0,0,0,20"
+                     FontSize="16"
+                    BorderBrush="#93a98f"
+                    Cursor="Hand" FontWeight="SemiBold"
+                    Background="#e9f0e6"
+                    IsSynchronizedWithCurrentItem="True"
+                    HorizontalContentAlignment="Center" 
+                    VerticalContentAlignment="Center"
+                    />
                 <Button
                     mah:ControlsHelper.ContentCharacterCasing="Upper"
                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
                     mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                    Command="{Binding SelectAllArtCommand}"
+                    Command="{Binding SelectCommand}"
                     BorderBrush="#93a98f"
                     Foreground="#337287" Cursor="Hand"
                     Margin="0,0,0,20" Height="30"
-                    Content="Select all art"/>
-                <Button 
-                    mah:ControlsHelper.ContentCharacterCasing="Upper"
-                    mah:ControlsHelper.FocusBorderBrush="#93a98f"
-                    mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                    Command="{Binding SelectAllLiteratureCommand}"
-                    BorderBrush="#93a98f"
-                    Foreground="#337287" Cursor="Hand"
-                    Margin="0,0,0,20" Height="30"
-                    Content="Select all literature"/>
+                    Content="Select"/>
                 <Button
                     mah:ControlsHelper.ContentCharacterCasing="Upper"
                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
                     mah:ControlsHelper.MouseOverBorderBrush="#93a98f"
-                    Command="{Binding SelectAllVideoCommand}"
+                    Command="{Binding ShowMoreSelectCommand}"
                     BorderBrush="#93a98f"
-                    Cursor="Hand" Foreground="#337287"
+                    Foreground="#337287" Cursor="Hand"
                     Margin="0,0,0,20" Height="30"
-                    Content="Select all video"/>
+                    Content="More"/>
                 <Button
                     mah:ControlsHelper.ContentCharacterCasing="Upper"
                     mah:ControlsHelper.FocusBorderBrush="#93a98f"
@@ -218,6 +241,14 @@
                                                 Binding="{Binding PublishDate,StringFormat='d'}"  
                                                 IsReadOnly="True"
                                                 Foreground="Black" Width="80" />
+                            <DataGridTextColumn Header="Original FIle" 
+                                                Binding="{Binding HaveOriginalFile}"  
+                                                IsReadOnly="True"
+                                                Foreground="Black" Width="100" />
+                            <DataGridTextColumn Header="Original FIle" 
+                    Binding="{Binding FileSize}"  
+                    IsReadOnly="True"
+                    Foreground="Black" Width="100" />
                             <DataGridTemplateColumn Header="" 
                                                     CanUserSort="False" 
                                                     Width="80">

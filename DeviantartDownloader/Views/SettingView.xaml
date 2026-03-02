@@ -202,10 +202,10 @@
                                       FlowDirection="LeftToRight"
                                       Margin="5,0,0,0" />
                             <CheckBox IsChecked="{Binding DescriptionOnly, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          IsEnabled="{Binding DownloadDescription}"
-          Content="Only download description"
-          FlowDirection="LeftToRight"
-          Margin="25,0,0,0" />
+                                      IsEnabled="{Binding DownloadDescription}"
+                                      Content="Only download description"
+                                      FlowDirection="LeftToRight"
+                                      Margin="25,0,0,0" />
                             <CheckBox IsChecked="{Binding IgnoreEmptyDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       IsEnabled="{Binding DownloadDescription}"
                                       Content="Ignore empty description"
