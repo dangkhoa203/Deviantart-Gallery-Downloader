@@ -328,7 +328,7 @@
                                                 Binding="{Binding HaveOriginalFile}"  
                                                 IsReadOnly="True"
                                                 Width="100" />
-                            <DataGridTextColumn Header="Original FIle" 
+                            <DataGridTextColumn Header="Size" 
                                                 Binding="{Binding FileSize}"  
                                                 IsReadOnly="True"
                                                 Width="100" />

@@ -160,6 +160,7 @@ namespace DeviantartDownloader.Service {
                     if(isLimit) {
                         if(limitCount + result.results.Count > count) {
                             contents.AddRange(result.results.Take(count - limitCount));
+                            break;
                         }
                         else {
                             limitCount += result.results.Count;
