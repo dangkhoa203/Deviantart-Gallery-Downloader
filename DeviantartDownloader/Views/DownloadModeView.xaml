@@ -6,14 +6,14 @@
                  xmlns:local="clr-namespace:DeviantartDownloader.Views"
                  xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                  xmlns:vm="clr-namespace:DeviantartDownloader.ViewModels"
-                 d:DataContext="{d:DesignInstance Type=vm:DownloadModeViewModel}"
                  xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+                 Dialog:DialogParticipation.Register="{Binding}"
+                 d:DataContext="{d:DesignInstance Type=vm:DownloadModeViewModel}"
                  mc:Ignorable="d"
                  Title="Download mode" Height="275" Width="800"
                  ResizeMode="NoResize" ShowIconOnTitleBar="False"
                  WindowStartupLocation="CenterScreen" WindowTitleBrush="#06070d"
-                 Background="#d4dfd0" BorderBrush="Black"
-                 Dialog:DialogParticipation.Register="{Binding}">    
+                 Background="#d4dfd0" BorderBrush="Black">    
     <Grid RowDefinitions="70,30,70,*">
         <StackPanel Grid.Row="0" 
                     Margin="20,0,20,0">
@@ -31,7 +31,8 @@
                       Cursor="Hand" FontWeight="SemiBold"
                       Background="#e9f0e6"/> 
         </StackPanel>
-        <Label Grid.Row="1"  
+        <Label Grid.Row="1" 
+               FontSize="16"
                HorizontalAlignment="Center" Margin="20,0,20,0" 
                Content="AND"/>
         <StackPanel Grid.Row="2" 

@@ -87,7 +87,7 @@ namespace DeviantartDownloader.ViewModels {
             }
         }
         public List<SelectionMode> SelectModes {
-            get; set;
+            get;
         } = [
             new("Art",DeviantType.Art),
             new("Literature",DeviantType.Literature),

@@ -7,14 +7,14 @@
                     xmlns:local="clr-namespace:DeviantartDownloader.Views"
                     xmlns:vm="clr-namespace:DeviantartDownloader.ViewModels" 
                     xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
-                    d:DataContext="{d:DesignInstance Type=vm:KeySettingViewModel}"
                     xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+                    Dialog:DialogParticipation.Register="{Binding}"
+                    d:DataContext="{d:DesignInstance Type=vm:KeySettingViewModel}"
                     mc:Ignorable="d"
                     Title="Key Setting" Height="370" Width="800"
                     ResizeMode="NoResize" ShowIconOnTitleBar="False"
                     WindowStartupLocation="CenterScreen" WindowTitleBrush="#06070d"
-                    Background="#d4dfd0" BorderBrush="Black"
-                    Dialog:DialogParticipation.Register="{Binding}">
+                    Background="#d4dfd0" BorderBrush="Black">
     <Grid RowDefinitions="65,120,30,30,*">
         <Grid Grid.Row="0" 
               Margin="20,10,20,0">
@@ -81,7 +81,7 @@
         <Grid Grid.Row="2" 
               Margin="20,0,20,10">
             <TextBlock FontSize="14" 
-                       Text="*By using user key, you can download higher resolution image"/>
+                       Text="*By using your own user key, you can download higher resolution image"/>
         </Grid>
         <Grid Grid.Row="3" 
               Margin="0,0,0,0">
