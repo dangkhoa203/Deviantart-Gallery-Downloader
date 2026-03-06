@@ -14,7 +14,7 @@ namespace DeviantartDownloader.Models {
         }
         public SelectionMode(string displayName, DownloadStatus? status = null) {
             DisplayName = displayName;
-            Status = Status;
+            Status = status;
         }
     }
 }
