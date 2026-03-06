@@ -9,12 +9,12 @@
                  xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
                  xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
                  d:DataContext="{d:DesignInstance Type=vm:SettingViewModel}"
+                 Dialog:DialogParticipation.Register="{Binding}"
                  mc:Ignorable="d"
                  Title="Setting" Height="650"  ResizeMode="NoResize" Width="800" 
                  ShowIconOnTitleBar="False"
                  WindowStartupLocation="CenterScreen" WindowTitleBrush="#06070d"
-                 Background="#d4dfd0" BorderBrush="Black"
-                 Dialog:DialogParticipation.Register="{Binding}">
+                 Background="#d4dfd0" BorderBrush="Black">
     <Grid RowDefinitions="*,60">
         <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <Grid RowDefinitions="325,100,160,80,350">
@@ -193,8 +193,7 @@
                         </Button>
                     </StackPanel>
                     <Grid Grid.Row="1"
-                          Margin="20,0,20,0"
-                          >
+                          Margin="20,0,20,0">
                         <StackPanel Grid.Column="0" 
                                     Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding DownloadDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -202,10 +201,10 @@
                                       FlowDirection="LeftToRight"
                                       Margin="5,0,0,0" />
                             <CheckBox IsChecked="{Binding DescriptionOnly, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          IsEnabled="{Binding DownloadDescription}"
-          Content="Only download description"
-          FlowDirection="LeftToRight"
-          Margin="25,0,0,0" />
+                                      IsEnabled="{Binding DownloadDescription}"
+                                      Content="Only download description"
+                                      FlowDirection="LeftToRight"
+                                      Margin="25,0,0,0" />
                             <CheckBox IsChecked="{Binding IgnoreEmptyDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       IsEnabled="{Binding DownloadDescription}"
                                       Content="Ignore empty description"
