@@ -8,6 +8,7 @@ namespace DeviantartDownloader.Models.Enum
     {
         Art=0,
         Literature=1,
-        Video=2
+        Video=2,
+        Unknown=3
     }
 }

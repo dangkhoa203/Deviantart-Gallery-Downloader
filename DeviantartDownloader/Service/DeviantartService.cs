@@ -176,37 +176,41 @@ namespace DeviantartDownloader.Service {
                     }
                 }
 
-                List<Deviant> deviants = contents
-                                .Select(o => new Deviant() {
-                                    Author = new Author() {
-                                        Id = o.author.userid,
-                                        Username = o.author.username
-                                    },
-                                    Content = o.content != null ? new MediaContent() {
-                                        Src = o.content.src,
-                                        FileSize = o.content.filesize
-                                    }
+                List<Deviant> deviants = [];
+                foreach(var o in contents) {
+                    var type = GetDeviationType(o);
+                    if(type != DeviantType.Unknown) {
+                        deviants.Add(new() {
+                            Author = new Author() {
+                                Id = o.author.userid,
+                                Username = o.author.username
+                            },
+                            Content = o.content != null ? new MediaContent() {
+                                Src = o.content.src,
+                                FileSize = o.content.filesize
+                            }
                                                                         : null,
-                                    Id = o.deviationid,
-                                    Title = o.title,
-                                    Url = o.url,
-                                    Video = o.videos != null ? o.videos
-                                                                         .Select(o => new MediaContent() {
-                                                                             Src = o.src,
-                                                                             Quality = o.quality,
-                                                                             FileSize = o.filesize
-                                                                         })
-                                                                         .ToList()
-                                                                     : null,
-                                    Downloadable = o.is_downloadable ?? false,
-                                    Type = GetDeviationType(o),
-                                    PublishDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(o.published_time)).Date,
-                                    ContentLocked = !(o.tier_access == null || o.tier_access == "unlocked"),
-                                    Status = (o.tier_access == null || o.tier_access == "unlocked") ? DownloadStatus.Waiting : DownloadStatus.Tier_Locked,
-                                    FileSize = GetDeviantFileSize(o)
-                                })
-                                .OrderByDescending(o => o.PublishDate)
-                                .ToList();
+                            Id = o.deviationid,
+                            Title = o.title,
+                            Url = o.url,
+                            Video = o.videos != null ? o.videos
+                                                                .Select(o => new MediaContent() {
+                                                                    Src = o.src,
+                                                                    Quality = o.quality,
+                                                                    FileSize = o.filesize
+                                                                })
+                                                                .ToList()
+                                                                : null,
+                            Downloadable = RefreshToken != null ? (o.is_downloadable ?? false) : false,
+                            Type = type,
+                            PublishDate = DateTimeOffset.FromUnixTimeSeconds(long.Parse(o.published_time)).Date,
+                            ContentLocked = !(o.tier_access == null || o.tier_access == "unlocked"),
+                            Status = (o.tier_access == null || o.tier_access == "unlocked") ? DownloadStatus.Waiting : DownloadStatus.Tier_Locked,
+                            FileSize = GetDeviantFileSize(o)
+                        });
+                    }
+                }
+                deviants = deviants.OrderByDescending(o => o.PublishDate).ToList();
                 return deviants;
             }
             catch(TaskCanceledException ex) {
@@ -432,15 +436,16 @@ namespace DeviantartDownloader.Service {
 
         }
         private DeviantType GetDeviationType(Content_DeviantAPI result) {
-            if(result.videos != null) {
+            if(result.videos != null && result.videos.Count>0) {
                 return DeviantType.Video;
             }
             else if(result.excerpt != null) {
                 return DeviantType.Literature;
             }
-            else {
+            else if(result.content != null) {
                 return DeviantType.Art;
             }
+            return DeviantType.Unknown;
         }
         private FileType GetFileType(DeviantType type, string url) {
             switch(type) {
